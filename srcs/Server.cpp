@@ -10,28 +10,52 @@ Server::Server(char **av)
 	if (!config.is_valid())
 		throw ConfigException();
 
-	confParams = config.getParams();
+	if ((_kq = kqueue()) == -1)
+	{
+		utils::logging("kqueue(): " + std::string(strerror(errno)));
+		throw KqueueException();
+	}
+
+	confParams	= config.getParams();
 	for (u_int i = 0; i < confParams.size(); ++i)
 	{
 		_sockets.push_back(new SimpSocket(confParams[i].host, confParams[i].port));
         utils::logging( "Server #" + std::to_string(i + 1) +
                         " started on http://" + confParams[i].host + ":" +
-						std::to_string(confParams[i].port), 3);
+						std::to_string(confParams[i].port), utils::connectionInfo);
 		SimpSocket	*tmp = *(--_sockets.end());
-		if (!tmp->is_socket_valid() || !tmp->allowMultipleConnectionsOnSocket() ||
+		if (!tmp->setSocketAsNonblock() || !tmp->allowMultipleConnectionsOnSocket() ||
 			!tmp->bindSocketToLocalSockaddr() || !tmp->listenForConnectionsOnSocket(BACKLOG))
 			throw SocketException();
 		_requests[tmp->getServerFd()];
 		_configs.insert(std::pair<int, Params>(tmp->getServerFd(), confParams[i]));
+
+		updateEvent(tmp->getServerFd(), EVFILT_READ, EV_ADD, 0, 0, nullptr);
 	}
-	_timeout.tv_sec = TIMEOUT;
-	_timeout.tv_usec = 0;
-	FD_ZERO(&_currentSockets);
-	FD_ZERO(&_readSockets);
-	FD_ZERO(&_writeSockets);
-	for (u_int i = 0; i < _sockets.size(); ++i)
-		FD_SET(_sockets[i]->getServerFd(), &_currentSockets);
+	_evList.resize(confParams.size());
 }
+
+void	Server::updateEvent(int socketFD, short filter, ushort flags, uint fflags, int data, void *udata, bool add)
+{
+	struct kevent ke;
+
+	EV_SET(&ke, socketFD, filter, flags, fflags, data, udata);
+
+//	if (add)
+//		_chList.push_back(ke);
+//	else if (flags == EV_DELETE) {
+//		for (Kevent::const_iterator it = _ke.cbegin(); it != _ke.cend(); ++it) {
+//			if ((*it).ident == socketFD) {
+//				_ke.erase(it);
+//				break;
+//			}
+//		}
+//	}
+
+	if (kevent(_kq, &ke, 1, NULL, 0, NULL) == -1)
+		throw KeventException();
+}
+
 
 Server::Server(Server const &src)
 {
@@ -41,8 +65,9 @@ Server::Server(Server const &src)
 Server &Server::operator = (const Server &src)
 {
 	this->_sockets			= src._sockets;
-	this->_currentSockets	= src._currentSockets;
-	this->_readSockets		= src._readSockets;
+	this->_requests			= src._requests;
+	this->_configs			= src._configs;
+	this->_timeout			= src._timeout;
 
 	return *this;
 }
@@ -60,124 +85,185 @@ Server::~Server()
 
 void	Server::runServer()
 {
-	struct sockaddr_in	address	= _sockets[0]->getAddress();
-	int					addrLen	= _sockets[0]->getAddressLen();
+	int		numberOfEvents;
 
 	while (true)
-		accepter(address, addrLen);
+	{
+		numberOfEvents = kqueue();
+		accept(numberOfEvents);
+		handle();
+	}
 }
 
-void	Server::accepter(struct sockaddr_in &address, int &addrLen)
+int		Server::kqueue()
 {
 	std::string			dots[4] = {"", ".", "..", "..."};
-	struct timeval		timeout;
-	int					socket;
-	int					selectStat = 0;
-	int					n = -1;
+	int					eventsNum = 0, n = -1;
 
-	while (selectStat == 0)
+	while (eventsNum == 0)
 	{
-		timeout = _timeout;
-//		std::cout << YELLOW << "\33[2K\rWaiting for connection" << dots[++n] << RESET << std::flush;
-//		if (n == 3)
-//			n = -1;
-		_readSockets = _currentSockets;
-		FD_ZERO(&_writeSockets);
-		selectStat = ::select(FD_SETSIZE, &_readSockets, &_writeSockets, nullptr, &timeout); // max num of sockets' fds (FD_SETSIZE)
+		std::cout << YELLOW << "\33[2K\rWaiting for connection" << dots[++n] << RESET << std::flush;
+		if (n == 3)
+			n = -1;
+		eventsNum = ::kevent(_kq, nullptr, 0, &*_evList.begin(), int(_configs.size()), &_timeout);;
 	}
-//	std::cout << "\33[2K\r";
-	if (selectStat == -1)
-		utils::logging(strerror(errno), 2);
-	else
+	std::cout << "\33[2K\r"; // cleans the terminal line
+
+	if (eventsNum == -1)
 	{
-		for (int i = 0; i < FD_SETSIZE; ++i)
+		utils::logging(strerror(errno), utils::error);
+		throw KeventException();
+	}
+
+	return eventsNum;
+}
+
+
+void	Server::accept(int numberOfEvents)
+{
+	int		socket;
+
+	for (int i = 0; i < numberOfEvents; ++i)
+	{
+		if (_configs.find((int)_evList[i].ident) != _configs.end())
+			newConnection((int)_evList[i].ident);
+		else
 		{
-			if (FD_ISSET(i, &_readSockets))
-			{
-				if (_configs.find(i) != _configs.end())
-				{
-					socket = accept(i, (struct sockaddr *)&address, (socklen_t *)&addrLen);
-					FD_SET(socket, &_currentSockets);
-				}
-				else
-					handler(i);
-			}
+
 		}
 	}
 }
 
-void	print_rawRequest(std::string const &request)
+void	Server::newConnection(int socketFd)
 {
-	std::cout << MAGENTA << "---------Reading request---------" << RESET << std::endl;
-	std::cout << request << std::endl;
-//	std::cout << request.length() << std::endl;
-	std::cout << MAGENTA << "---------------------------------" << RESET << std::endl;
+	sockaddr_in	clientAddress;
+	socklen_t	clientAddressLen = sizeof clientAddress;
+	int			clientFd;
+
+	if ((clientFd = ::accept(socketFd, (struct sockaddr *)&clientAddress, &clientAddressLen)) == -1)
+	{
+		utils::logging("error: accept()", utils::error); // http code 500
+		return;
+	}
+	fcntl(clientFd, F_SETFL, O_NONBLOCK);
+
+	_clients[clientFd] = new Client(socketFd, clientAddress);
+
+	updateEvent(clientFd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, nullptr);
+	updateEvent(clientFd, EVFILT_WRITE, EV_ADD | EV_DISABLE, 0, 0, nullptr);
+
+	utils::logging("New connection on " + _clients[clientFd]->getIp());
 }
 
-void	print_fullRequest(std::map<std::string, std::string> const &request)
+
+
+
+
+
+
+
+
+
+
+void	Server::handle()
 {
-	std::cout << MAGENTA << "---------Reading request---------" << RESET << std::endl;
-//	for (const auto &elem : request)
-//		std::cout << elem.first << " : " << elem.second << std::endl;
-	for (std::map<std::string, std::string>::const_iterator it = request.cbegin(); it != request.end(); ++it)
-		std::cout << it->first << " : " << it->second << std::endl;
-	std::cout << MAGENTA << "---------------------------------" << RESET << std::endl;
+	for (Clients::const_iterator it = _clients.cbegin(); it != _clients.cend(); ++it)
+	{
+		std::cout << (*it).socket << std::endl;
+
+		if (FD_ISSET((*it).socket, &_readSockets) && !reciever((*it).socket))
+		{
+			disconnect((*it).socket);
+			continue;
+		}
+		// timeout check
+		// ...
+
+
+		if (FD_ISSET((*it).socket, &_writeSockets) && !sender((*it).socket))
+		{
+			disconnect((*it).socket);
+			continue;
+		}
+	}
 }
 
-void	print_shortRequest(Request const *request)
+void	Server::disconnect(int clientSocket)
 {
-	std::cout << MAGENTA << "---------Reading request---------" << RESET << std::endl;
-	std::cout	<< request->getMethod() << " "
-				<< request->getPath() << " "
-				<< request->getAccept() << std::endl
-				<< "Body: " << request->getBody() << std::endl;
-//				<< request->getCookie() << std::endl;
-	std::cout << MAGENTA << "---------------------------------" << RESET << std::endl;
+	remove_from_all_fds(clientSocket);
+
+	for (Clients::const_iterator it = _clients.cbegin(); it != _clients.cend(); ++it)
+		if ((*it).socket == clientSocket)
+		{
+			_clients.erase(it);
+			utils::logging("Connection closed on " + (*it).ip);
+			break;
+		}
+//	close(clientSocket);
+//	delete _requests[clientSocket];
 }
 
-void	Server::handler(int clientSocket)
+void	Server::remove_from_all_fds(int fd)
+{
+	for (std::list<int>::const_iterator it = _all_fds.cbegin(); it != _all_fds.cend(); ++it)
+		if (*it == fd)
+		{
+			_all_fds.erase(it);
+			break;
+		}
+	FD_CLR(fd, &_masterSockets);
+	if (fd == _max_fd)
+		_max_fd = *std::max_element(_all_fds.begin(), _all_fds.end());
+}
+
+bool	Server::reciever(int clientSocket)
 {
 	char		buffer[BUFF_SIZE];
 	size_t		bytes;
-//	std::string	data;
 
-	FD_CLR(clientSocket, &_currentSockets);
+	FD_CLR(clientSocket, &_readSockets);
 
 	if ((bytes = ::recv(clientSocket, buffer, BUFF_SIZE, 0)) == -1)
-		utils::logging("Server: recv failed", 2);
+		utils::logging("Server: recv failed", utils::error);
 	if (!bytes)
-		utils::logging("Connection closed", 3);
+	{
+		utils::logging("Connection closed", utils::connectionInfo);
+		return false;
+	}
 
-	std::string	recvd(buffer, bytes + 30);
+	std::string	recvd(buffer, bytes);
+
+	utils::print_rawRequest(recvd);
 
 	_requests[clientSocket] = new Request(recvd);
 	_requests[clientSocket]->parseRequest();
-//	utils::logging(_requests[clientSocket]->getMethod() + " " + _requests[clientSocket]->getPath());
-//	print_rawRequest(recvd);
-//	print_fullRequest(_requests[clientSocket]->getRequest());
-//	print_shortRequest(_requests[clientSocket]);
 
+	return true;
+}
+
+bool	Server::sender(int clientSocket)
+{
 	u_int		i		= 0;
 	std::string	host	= _requests[clientSocket]->getHost();
 	std::string	port	= _requests[clientSocket]->getPort();
+	size_t		bytes;
+
+	FD_CLR(clientSocket, &_writeSockets);
 
 	for (; i < _configs.size(); ++i)
-		if (_configs[i].host == host && std::to_string(_configs[i].port) == port)
+		if (_configs[int(i)].host == host && std::to_string(_configs[int(i)].port) == port)
 			break ;
-	Response	response(_configs[i], _requests[clientSocket]);
+
+	Response	response(_configs[int(i)], _requests[clientSocket]);
 	response.process();
 
-//	std::cout << response.getResponse() << std::endl;
-//	std::cout << response.getRespLength() << std::endl;
+	bytes = send(clientSocket, response.getResponse().c_str(), response.getRespLength(), 0);
+	if (bytes == -1 || !bytes)
+		return false;
 
-	send(clientSocket, response.getResponse().c_str(), response.getRespLength(), 0);
-
-	close(clientSocket);
+//	close(clientSocket);
 	delete _requests[clientSocket];
-}
+//	std::cout << "HERE" << std::endl;
 
-//void	Server::responder(int clientSocket, Request const *request)
-//{
-//	std::string	response = utils::readFile("error_pages/404.html");
-//	send(clientSocket, response.c_str(), response.size() + 1, 0);
-//}
+	return false;
+}

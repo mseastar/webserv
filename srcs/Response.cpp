@@ -27,7 +27,7 @@ std::map<int, std::string> Response::_createMap()
 	return m;
 }
 
-Response::Response(Params const &config, Request const *request)
+Response::Response(Params &config, Request *request)
 	: _statusCode(200), _config(config), _request(request)
 {
 }
@@ -165,6 +165,10 @@ char	**Response::getCgiEnv(std::string const &path, std::string const &filename)
 bool	Response::is_cgi()
 {
 	try {
+		if (_config.locations[utils::split(_request->getPath(), "?").at(0)].empty())
+			return false;
+		if (_config.locations[utils::split(_request->getPath(), "?").at(0)]["cgi"].empty())
+			return false;
 		if (!_config.locations.at(utils::split(_request->getPath(), "?").at(0)).at("cgi").empty())
 			return true;
 		return false;
@@ -175,7 +179,9 @@ bool	Response::is_cgi()
 bool	Response::is_redirect()
 {
 	try {
-		if (!_config.locations.at(_request->getPath()).at("redirect").empty())
+		if (_config.locations[_request->getPath()].empty())
+			return false;
+		if (!_config.locations.at(_request->getPath())["redirect"].empty())
 			return _statusCode = 307;
 		return false;
 	}
@@ -185,17 +191,16 @@ bool	Response::is_redirect()
 std::string	Response::is_autoindex()
 {
 	try {
-		std::vector<std::string>	tmp = utils::split(_request->getPath(), "/");
+		std::vector<std::string>	tmp = utils::split(utils::trim(_request->getPath(), "/"), "/");
 		std::string					str;
 
 		for (u_int i = 0; i < tmp.size(); ++i)
 		{
-			try {
-				str += "/" + tmp[i];
-				if (_config.locations.at(str).at("autoindex") == "on")
-					return str;
-			}
-			catch (...) { str += "/" + tmp[i]; }
+			str += "/" + tmp[i];
+			if (_config.locations[str].empty())
+				continue;
+			if (_config.locations.at(str).at("autoindex") == "on")
+				return str;
 		}
 		return "";
 	}
@@ -208,6 +213,8 @@ bool	Response::is_valid()
 
 //	checks if requested PATH exists
 	try {
+		if (_config.locations[_request->getPath()].empty())
+			return !(_statusCode = 404);
 		confLocation = _config.locations.at(_request->getPath());
 	}
 	catch (...) { return !(_statusCode = 404); }

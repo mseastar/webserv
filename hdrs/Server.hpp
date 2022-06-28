@@ -2,8 +2,7 @@
 // Created by Grubbly Ernesto on 6/7/22.
 //
 
-#ifndef ZERO_WEBSERV_SERVER_HPP
-# define ZERO_WEBSERV_SERVER_HPP
+#pragma once
 
 # include "Utils.hpp"
 # include "SimpSocket.hpp"
@@ -16,20 +15,40 @@
 # define BUFF_SIZE 65000
 
 struct Server {
+	struct	Client {
+		int			socket;
+		sockaddr_in	address;
+
+		Client(int socketFd, sockaddr_in clAddr) : socket(socketFd), address(clAddr) {};
+
+		int			getSocket() { return socket; };
+		sockaddr_in	getAddress () { return address; };
+		std::string	getIp () { return inet_ntoa(address.sin_addr); };
+	};
+
 	typedef std::vector<SimpSocket *>	Sockets;
+	typedef std::map<int, Client*>		Clients;
 	typedef std::map<int, Request *>	Requests;
 	typedef std::map<int, Params>		Configs;
+	typedef std::vector<struct kevent>	Kevent;
 private:
-//	char			**envp;
-	Sockets			_sockets;
-	Requests		_requests;
 	Configs			_configs;
-	fd_set			_currentSockets, _readSockets, _writeSockets;
-	struct timeval	_timeout;
+	Sockets			_sockets;
+	Clients			_clients;
+	Requests		_requests;
+	Kevent			_chList, _evList; // events we want to monitor, events that were triggered
+	struct timespec	_timeout = { TIMEOUT, 0 };
+	int				_kq;
 
-	void		accepter(struct sockaddr_in &, int &);
-	void		handler(int);
-//	void		responder(int, Request const *);
+	void		updateEvent(int socketFD, short filter, ushort flags, uint fflags, int data, void *udata, bool = false);
+	void		newConnection(int);
+	int			kqueue();
+	void		accept(int);
+	void		handle();
+	bool		reciever(int);
+	bool		sender(int);
+	void		disconnect(int);
+	void		remove_from_all_fds(int);
 
 public:
 	Server(char **av);
@@ -43,15 +62,22 @@ public:
 
 	struct	ConfigException: std::exception {
 		const char	*what() const throw() {
-			return "[Exception] Bad Config: check logs file for more info";
+			return "[Exception] Bad Config: check logs for more info";
 		}
 	};
 	struct	SocketException: std::exception {
 		const char	*what() const throw() {
-			return "[System Exception] Socket: check logs file for more info";
+			return "[System Exception] Socket: check logs for more info";
+		}
+	};
+	struct	KqueueException: std::exception {
+		const char	*what() const throw() {
+			return "[System Exception] kqueue(): check logs for more info";
+		}
+	};
+	struct	KeventException: std::exception {
+		const char	*what() const throw() {
+			return "[System Exception] kevent(): check logs for more info";
 		}
 	};
 };
-
-
-#endif //ZERO_WEBSERV_SERVER_HPP

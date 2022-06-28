@@ -2,11 +2,9 @@
 // Created by Grubbly Ernesto on 6/7/22.
 //
 
-#ifndef ZERO_WEBSERV_REQUEST_HPP
-# define ZERO_WEBSERV_REQUEST_HPP
+#pragma once
 
 # include "Utils.hpp"
-# include <map>
 
 class Request {
 private:
@@ -30,6 +28,3 @@ public:
 	std::string							getHost() const { return utils::split(_request.at("Host"), ":")[0]; };
 	std::string							getPort() const { return utils::split(_request.at("Host"), ":")[1]; };
 };
-
-
-#endif //ZERO_WEBSERV_REQUEST_HPP

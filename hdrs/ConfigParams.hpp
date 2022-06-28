@@ -6,7 +6,6 @@
 # define ZERO_WEBSERV_CONFIGPARAMS_HPP
 
 # include "Utils.hpp"
-# include <map>
 
 struct Params {
 	typedef std::map<std::string, std::string>							strPairMap;

@@ -2,8 +2,7 @@
 // Created by Grubbly Ernesto on 6/13/22.
 //
 
-#ifndef ZERO_WEBSERV_RESPONSE_HPP
-# define ZERO_WEBSERV_RESPONSE_HPP
+#pragma once
 
 # include "Request.hpp"
 # include "Config.hpp"
@@ -26,8 +25,8 @@ private:
 	std::string		_header;
 	std::string		_response;
 	int				_statusCode;
-	const Params	_config;
-	const Request	*_request;
+	Params			_config;
+	Request			*_request;
 
 	std::string		_username;
 
@@ -42,7 +41,7 @@ private:
 	char		**getCgiEnv(std::string const &scriptName, std::string const &filename = "") const;
 
 public:
-	Response(Params const &, Request const *);
+	Response(Params &, Request *);
 //	Response(Response const &other);
 //	Response &operator = (Response const &other);
 //	virtual ~Response();
@@ -53,6 +52,3 @@ public:
 	void		process();
 
 };
-
-
-#endif //ZERO_WEBSERV_RESPONSE_HPP

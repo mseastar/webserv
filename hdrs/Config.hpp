@@ -2,14 +2,10 @@
 // Created by Grubbly Ernesto on 6/8/22.
 //
 
-#ifndef ZERO_WEBSERV_CONFIG_HPP
-# define ZERO_WEBSERV_CONFIG_HPP
+#pragma once
 
 # include "Utils.hpp"
 # include "ConfigParams.hpp"
-# include <unistd.h>
-# include <sys/stat.h>
-# include <map>
 
 # define CONF_DIR "config/"
 
@@ -48,6 +44,3 @@ public:
 	std::string			getErrorMsg() const { return _error_msg; };
 	HostsPortsPair		getHostsPortsPair() const {  return _hostsPorts; };
 };
-
-
-#endif //ZERO_WEBSERV_CONFIG_HPP
