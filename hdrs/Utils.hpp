@@ -40,9 +40,9 @@ class Request;
 
 namespace utils {
 	enum	logLevels {
-		serverInfo = 1,
+		connectionInfo = 1,
 		error,
-		connectionInfo
+		serverInfo
 	};
 
 	void						createLogFile();

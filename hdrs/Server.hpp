@@ -16,14 +16,18 @@
 
 struct Server {
 	struct	Client {
-		int			socket;
+		int			socketFd;
+		std::string	ip;
+		int			acceptFd;
 		sockaddr_in	address;
 
-		Client(int socketFd, sockaddr_in clAddr) : socket(socketFd), address(clAddr) {};
+		Client(int socketFd, std::string const &ip, int acceptFd, sockaddr_in clAddr)
+			: socketFd(socketFd), ip(ip), acceptFd(acceptFd), address(clAddr) {};
 
-		int			getSocket() { return socket; };
-		sockaddr_in	getAddress () { return address; };
-		std::string	getIp () { return inet_ntoa(address.sin_addr); };
+		int			getSocketFd()	const { return socketFd; };
+		int			getAcceptFd()	const { return acceptFd; };
+		sockaddr_in	getAddress ()	const { return address; };
+		std::string	getIp ()		const { return ip; };
 	};
 
 	typedef std::vector<SimpSocket *>	Sockets;
@@ -31,6 +35,7 @@ struct Server {
 	typedef std::map<int, Request *>	Requests;
 	typedef std::map<int, Params>		Configs;
 	typedef std::vector<struct kevent>	Kevent;
+
 private:
 	Configs			_configs;
 	Sockets			_sockets;
@@ -41,12 +46,13 @@ private:
 	int				_kq;
 
 	void		updateEvent(int socketFD, short filter, ushort flags, uint fflags, int data, void *udata, bool = false);
-	void		newConnection(int);
-	int			kqueue();
+	void		acceptConnection(int);
+	void		dropConnection(Client *, bool = true);
+	int			kevent();
 	void		accept(int);
-	void		handle();
-	bool		reciever(int);
-	bool		sender(int);
+//	void		handle();
+	void		reciever(Client *cl, long dataLen);
+	bool		sender(Client *cl, long availBytes);
 	void		disconnect(int);
 	void		remove_from_all_fds(int);
 

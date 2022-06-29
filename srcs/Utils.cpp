@@ -25,13 +25,13 @@ namespace utils {
 
 		switch (fd) {
 			case serverInfo:
-				std::cout << BLUE << timestamp << RESET << CYAN << msg << RESET << std::endl;
+				std::cout << BLUE << timestamp << RESET << GREEN << msg << RESET << std::endl;
 				break;
 			case error:
 				std::cerr << BLUE << timestamp << RESET << RED << msg << RESET << std::endl;
 				break;
 			case connectionInfo:
-				std::cout << BLUE << timestamp << RESET << GREEN << msg << RESET << std::endl;
+				std::cout << BLUE << timestamp << RESET << CYAN << msg << RESET << std::endl;
 				break;
 			default:
 				std::cout << msg << std::endl;

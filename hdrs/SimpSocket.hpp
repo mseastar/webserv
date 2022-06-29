@@ -45,7 +45,7 @@ public:
 	};
 	struct	SocketException: std::exception {
 		const char	*what() const throw() {
-			return "Socket: error in 'socket' function";
+			return "Socket: error in 'socketFd' function";
 		}
 	};
 };
