@@ -31,7 +31,7 @@ public:
 	bool	allowMultipleConnectionsOnSocket();
 	bool	bindSocketToLocalSockaddr();
 	bool	initiateConnectionOnSocket(); // for client
-	bool	listenForConnectionsOnSocket(int backlog);
+	bool	listenForConnectionsOnSocket();
 
 	std::string					getIP() const { return host + ":" + std::to_string(port); };
 	int							getServerFd() const { return serverFd; };

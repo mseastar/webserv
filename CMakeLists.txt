@@ -6,8 +6,8 @@ set(CMAKE_CXX_STANDARD 11)
 add_executable(zero_webserv
         srcs/main.cpp
         srcs/Utils.cpp
-        srcs/Server.cpp
         srcs/SimpSocket.cpp
+        srcs/Server.cpp
         srcs/Request.cpp
         srcs/Config.cpp
         srcs/Response.cpp

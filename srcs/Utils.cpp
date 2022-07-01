@@ -104,4 +104,11 @@ namespace utils {
 //				<< request->getCookie() << std::endl;
 		std::cout << MAGENTA << "---------------------------------" << RESET << std::endl;
 	}
+
+	std::string	to_lower(std::string src)
+	{
+		for (u_long i = 0; i < src.size(); ++i)
+			src[i] = (char)tolower(src[i]);
+		return src;
+	}
 }

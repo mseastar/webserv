@@ -53,5 +53,6 @@ namespace utils {
 	void						print_rawRequest(std::string const &request);
 	void						print_fullRequest(std::map<std::string, std::string> const &request);
 	void						print_shortRequest(Request const *request);
+	std::string					to_lower(std::string);
 
 }

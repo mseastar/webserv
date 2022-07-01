@@ -12,14 +12,15 @@
 //#include "hdrs/Utils.hpp"
 //#include "hdrs/Config.hpp"
 
+void foo()
+{
+	static int a;
+
+	std::cout << ++a << std::endl;
+}
+
 int main(int ac, char **av, char **env)
 {
-	std::map<int, std::string>	a;
-
-	a[1] = "1";
-	a[2] = "2";
-	a[3] = "3";
-
-	std::cout << a.find(1)->second << std::endl;
-
+	for (int i = 0; i < 10; ++i)
+		foo();
 }

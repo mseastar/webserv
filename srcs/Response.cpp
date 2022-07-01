@@ -122,7 +122,6 @@ std::string	Response::getCgiResponse(std::string const &path, std::string const 
 			free(tmp_env[i]);
 		free(tmp_env);
 	}
-//	std::cout << buf << std::endl;
 	return buf;
 }
 
@@ -199,7 +198,7 @@ std::string	Response::is_autoindex()
 			str += "/" + tmp[i];
 			if (_config.locations[str].empty())
 				continue;
-			if (_config.locations.at(str).at("autoindex") == "on")
+			if (_config.locations[str]["autoindex"] == "on")
 				return str;
 		}
 		return "";
@@ -246,7 +245,7 @@ void	Response::craftHeader()
 			  std::to_string(_statusCode) + " " +
 			  _statusPhrase.at(_statusCode) + "\r\n" +
 			  "Server: " + _config.server_name + "\r\n" +
-			  "Connection: Closed\r\n" +
+			  "Connection: keep-alive\r\n" +
 			  "Content-Length: " + std::to_string(_body.size()) + "\r\n";
 	if (_statusCode == 301 || _statusCode == 307)
 	{

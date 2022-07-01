@@ -23,10 +23,12 @@ class Response {
 private:
 	std::string		_body;
 	std::string		_header;
-	std::string		_response;
 	int				_statusCode;
 	Params			_config;
 	Request			*_request;
+
+	std::string		_response;
+
 
 	std::string		_username;
 

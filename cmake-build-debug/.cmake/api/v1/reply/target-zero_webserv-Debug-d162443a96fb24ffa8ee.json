@@ -131,13 +131,13 @@
 		{
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
-			"path" : "srcs/Server.cpp",
+			"path" : "srcs/SimpSocket.cpp",
 			"sourceGroupIndex" : 0
 		},
 		{
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
-			"path" : "srcs/SimpSocket.cpp",
+			"path" : "srcs/Server.cpp",
 			"sourceGroupIndex" : 0
 		},
 		{

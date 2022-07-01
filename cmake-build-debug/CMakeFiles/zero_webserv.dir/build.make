@@ -97,24 +97,10 @@ CMakeFiles/zero_webserv.dir/srcs/Utils.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/zero_webserv.dir/srcs/Utils.cpp.s"
 	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/gernesto/Desktop/webserv/srcs/Utils.cpp -o CMakeFiles/zero_webserv.dir/srcs/Utils.cpp.s
 
-CMakeFiles/zero_webserv.dir/srcs/Server.cpp.o: CMakeFiles/zero_webserv.dir/flags.make
-CMakeFiles/zero_webserv.dir/srcs/Server.cpp.o: ../srcs/Server.cpp
-CMakeFiles/zero_webserv.dir/srcs/Server.cpp.o: CMakeFiles/zero_webserv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/gernesto/Desktop/webserv/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/zero_webserv.dir/srcs/Server.cpp.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/zero_webserv.dir/srcs/Server.cpp.o -MF CMakeFiles/zero_webserv.dir/srcs/Server.cpp.o.d -o CMakeFiles/zero_webserv.dir/srcs/Server.cpp.o -c /Users/gernesto/Desktop/webserv/srcs/Server.cpp
-
-CMakeFiles/zero_webserv.dir/srcs/Server.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/zero_webserv.dir/srcs/Server.cpp.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/gernesto/Desktop/webserv/srcs/Server.cpp > CMakeFiles/zero_webserv.dir/srcs/Server.cpp.i
-
-CMakeFiles/zero_webserv.dir/srcs/Server.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/zero_webserv.dir/srcs/Server.cpp.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/gernesto/Desktop/webserv/srcs/Server.cpp -o CMakeFiles/zero_webserv.dir/srcs/Server.cpp.s
-
 CMakeFiles/zero_webserv.dir/srcs/SimpSocket.cpp.o: CMakeFiles/zero_webserv.dir/flags.make
 CMakeFiles/zero_webserv.dir/srcs/SimpSocket.cpp.o: ../srcs/SimpSocket.cpp
 CMakeFiles/zero_webserv.dir/srcs/SimpSocket.cpp.o: CMakeFiles/zero_webserv.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/gernesto/Desktop/webserv/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/zero_webserv.dir/srcs/SimpSocket.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/gernesto/Desktop/webserv/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/zero_webserv.dir/srcs/SimpSocket.cpp.o"
 	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/zero_webserv.dir/srcs/SimpSocket.cpp.o -MF CMakeFiles/zero_webserv.dir/srcs/SimpSocket.cpp.o.d -o CMakeFiles/zero_webserv.dir/srcs/SimpSocket.cpp.o -c /Users/gernesto/Desktop/webserv/srcs/SimpSocket.cpp
 
 CMakeFiles/zero_webserv.dir/srcs/SimpSocket.cpp.i: cmake_force
@@ -124,6 +110,20 @@ CMakeFiles/zero_webserv.dir/srcs/SimpSocket.cpp.i: cmake_force
 CMakeFiles/zero_webserv.dir/srcs/SimpSocket.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/zero_webserv.dir/srcs/SimpSocket.cpp.s"
 	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/gernesto/Desktop/webserv/srcs/SimpSocket.cpp -o CMakeFiles/zero_webserv.dir/srcs/SimpSocket.cpp.s
+
+CMakeFiles/zero_webserv.dir/srcs/Server.cpp.o: CMakeFiles/zero_webserv.dir/flags.make
+CMakeFiles/zero_webserv.dir/srcs/Server.cpp.o: ../srcs/Server.cpp
+CMakeFiles/zero_webserv.dir/srcs/Server.cpp.o: CMakeFiles/zero_webserv.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/gernesto/Desktop/webserv/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/zero_webserv.dir/srcs/Server.cpp.o"
+	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/zero_webserv.dir/srcs/Server.cpp.o -MF CMakeFiles/zero_webserv.dir/srcs/Server.cpp.o.d -o CMakeFiles/zero_webserv.dir/srcs/Server.cpp.o -c /Users/gernesto/Desktop/webserv/srcs/Server.cpp
+
+CMakeFiles/zero_webserv.dir/srcs/Server.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/zero_webserv.dir/srcs/Server.cpp.i"
+	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/gernesto/Desktop/webserv/srcs/Server.cpp > CMakeFiles/zero_webserv.dir/srcs/Server.cpp.i
+
+CMakeFiles/zero_webserv.dir/srcs/Server.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/zero_webserv.dir/srcs/Server.cpp.s"
+	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/gernesto/Desktop/webserv/srcs/Server.cpp -o CMakeFiles/zero_webserv.dir/srcs/Server.cpp.s
 
 CMakeFiles/zero_webserv.dir/srcs/Request.cpp.o: CMakeFiles/zero_webserv.dir/flags.make
 CMakeFiles/zero_webserv.dir/srcs/Request.cpp.o: ../srcs/Request.cpp
@@ -171,8 +171,8 @@ CMakeFiles/zero_webserv.dir/srcs/Response.cpp.s: cmake_force
 zero_webserv_OBJECTS = \
 "CMakeFiles/zero_webserv.dir/srcs/main.cpp.o" \
 "CMakeFiles/zero_webserv.dir/srcs/Utils.cpp.o" \
-"CMakeFiles/zero_webserv.dir/srcs/Server.cpp.o" \
 "CMakeFiles/zero_webserv.dir/srcs/SimpSocket.cpp.o" \
+"CMakeFiles/zero_webserv.dir/srcs/Server.cpp.o" \
 "CMakeFiles/zero_webserv.dir/srcs/Request.cpp.o" \
 "CMakeFiles/zero_webserv.dir/srcs/Config.cpp.o" \
 "CMakeFiles/zero_webserv.dir/srcs/Response.cpp.o"
@@ -182,8 +182,8 @@ zero_webserv_EXTERNAL_OBJECTS =
 
 zero_webserv: CMakeFiles/zero_webserv.dir/srcs/main.cpp.o
 zero_webserv: CMakeFiles/zero_webserv.dir/srcs/Utils.cpp.o
-zero_webserv: CMakeFiles/zero_webserv.dir/srcs/Server.cpp.o
 zero_webserv: CMakeFiles/zero_webserv.dir/srcs/SimpSocket.cpp.o
+zero_webserv: CMakeFiles/zero_webserv.dir/srcs/Server.cpp.o
 zero_webserv: CMakeFiles/zero_webserv.dir/srcs/Request.cpp.o
 zero_webserv: CMakeFiles/zero_webserv.dir/srcs/Config.cpp.o
 zero_webserv: CMakeFiles/zero_webserv.dir/srcs/Response.cpp.o

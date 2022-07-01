@@ -104,9 +104,9 @@ bool	SimpSocket::initiateConnectionOnSocket()
 	return true;
 }
 
-bool	SimpSocket::listenForConnectionsOnSocket(int bcklg)
+bool	SimpSocket::listenForConnectionsOnSocket()
 {
-	if (::listen(serverFd, bcklg) < 0)
+	if (::listen(serverFd, SOMAXCONN) < 0)
 	{
 		utils::logging("listen: " + std::string(strerror(errno)), 2);
 		return false;

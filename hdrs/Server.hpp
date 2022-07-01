@@ -11,8 +11,6 @@
 # include "Config.hpp"
 
 # define TIMEOUT 1
-# define BACKLOG 100
-# define BUFF_SIZE 65000
 
 struct Server {
 	struct	Client {
@@ -42,6 +40,7 @@ private:
 	Clients			_clients;
 	Requests		_requests;
 	Kevent			_chList, _evList; // events we want to monitor, events that were triggered
+
 	struct timespec	_timeout = { TIMEOUT, 0 };
 	int				_kq;
 
@@ -51,10 +50,8 @@ private:
 	int			kevent();
 	void		accept(int);
 //	void		handle();
-	void		reciever(Client *cl, long dataLen);
+	bool		receiver(Client *cl, long dataLen);
 	bool		sender(Client *cl, long availBytes);
-	void		disconnect(int);
-	void		remove_from_all_fds(int);
 
 public:
 	Server(char **av);
