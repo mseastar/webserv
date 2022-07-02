@@ -56,3 +56,5 @@ namespace utils {
 	std::string					to_lower(std::string);
 
 }
+
+using namespace utils;

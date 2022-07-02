@@ -26,7 +26,7 @@ void	Request::push_request(std::string requestPart)
 		return;
 	}
 
-	std::vector<std::string>	request = utils::split(_rawRequest, "\r\n\r\n");
+	std::vector<std::string>	request = split(_rawRequest, "\r\n\r\n");
 	if (request.size() != 2)
 		request.push_back("");
 
@@ -40,7 +40,7 @@ void	Request::parseBody(std::string const &body)
 {
 	if (_request["Method"] == "GET")
 	{
-		std::vector<std::string>	params = utils::split(_request["Path"], "?");
+		std::vector<std::string>	params = split(_request["Path"], "?");
 
 		if (params.size() == 2)
 			_request["Body"] = params.at(1);
@@ -80,7 +80,7 @@ void	Request::parseBody(std::string const &body)
 	_requestStatus |= RE_BODY;
 }
 
-std::string	Request::getChunck(const std::string &src)
+std::string	Request::getChunk(const std::string &src)
 {
 	std::string	chunk;
 
@@ -91,22 +91,22 @@ std::string	Request::getChunck(const std::string &src)
 
 void	Request::parseHeader(std::string const &header)
 {
-	std::vector<std::string>	params	= utils::split(header, "\r\n");
+	std::vector<std::string>	params	= split(header, "\r\n");
 	std::vector<std::string>	tmp;
 
-	tmp = utils::split(params.at(0));
+	tmp = split(params.at(0));
 	_request.insert(std::pair<std::string, std::string>("Method", tmp.at(0)));
 	_request.insert(std::pair<std::string, std::string>("Path", tmp.at(1)));
 	_request.insert(std::pair<std::string, std::string>("Protocol", tmp.at(2)));
 
-	tmp = utils::split(params.at(1), ":");
-	_request.insert(std::pair<std::string, std::string>(tmp.at(0), utils::trim(tmp.at(1)) + ":" + tmp.at(2))); // maybe remake
+	tmp = split(params.at(1), ":");
+	_request.insert(std::pair<std::string, std::string>(tmp.at(0), trim(tmp.at(1)) + ":" + tmp.at(2))); // maybe remake
 
 	for (u_int i = 2; i < params.size(); ++i)
 	{
-		tmp = utils::split(params.at(i), ":");
+		tmp = split(params.at(i), ":");
 		if (!tmp.at(0).empty() && tmp.size() == 2)
-			_request.insert(std::pair<std::string, std::string>(tmp.at(0),utils::trim(tmp.at(1))));
+			_request.insert(std::pair<std::string, std::string>(tmp.at(0),trim(tmp.at(1))));
 	}
 
 	if (_request["Cookie"].empty())
@@ -122,30 +122,30 @@ void	Request::parseHeader(std::string const &header)
 //		_request["Accept"] = _request["Accept-Encoding"];
 //		_request.erase("Accept-Encoding");
 //	}
-	_request["Accept"] = utils::trim(utils::split(_request.at("Accept"), ",").at(0));
+	_request["Accept"] = trim(split(_request.at("Accept"), ",").at(0));
 
 	_requestStatus |= RE_HEAD;
 }
 
 void	Request::parseRequest()
 {
-	std::vector<std::string>	request	= utils::split(_rawRequest, "\r\n\r\n");
-	std::vector<std::string>	params	= utils::split(request.at(0), "\r\n");
+	std::vector<std::string>	request	= split(_rawRequest, "\r\n\r\n");
+	std::vector<std::string>	params	= split(request.at(0), "\r\n");
 	std::vector<std::string>	tmp;
 
-	tmp = utils::split(params.at(0));
+	tmp = split(params.at(0));
 	_request.insert(std::pair<std::string, std::string>("Method", tmp.at(0)));
 	_request.insert(std::pair<std::string, std::string>("Path", tmp.at(1)));
 	_request.insert(std::pair<std::string, std::string>("Protocol", tmp.at(2)));
 
-	tmp = utils::split(params.at(1), ":");
-	_request.insert(std::pair<std::string, std::string>(tmp.at(0), utils::trim(tmp.at(1)) + ":" + tmp.at(2)));
+	tmp = split(params.at(1), ":");
+	_request.insert(std::pair<std::string, std::string>(tmp.at(0), trim(tmp.at(1)) + ":" + tmp.at(2)));
 
 	for (u_int i = 2; i < params.size(); ++i)
 	{
-		tmp = utils::split(params.at(i), ":");
+		tmp = split(params.at(i), ":");
 		if (!tmp.at(0).empty() && tmp.size() == 2)
-			_request.insert(std::pair<std::string, std::string>(tmp.at(0),utils::trim(tmp.at(1))));
+			_request.insert(std::pair<std::string, std::string>(tmp.at(0),trim(tmp.at(1))));
 	}
 
 	if (_request["Accept"].empty())
@@ -153,7 +153,7 @@ void	Request::parseRequest()
 		_request["Accept"] = _request["Accept-Encoding"];
 		_request.erase("Accept-Encoding");
 	}
-	_request["Accept"] = utils::trim(utils::split(_request.at("Accept"), ",").at(0));
+	_request["Accept"] = trim(split(_request.at("Accept"), ",").at(0));
 	if (_request["Cookie"].empty())
 		_request["Cookie"];
 	if (request.size() == 1 || _request["Content-Length"].empty())

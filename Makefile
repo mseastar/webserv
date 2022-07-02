@@ -24,17 +24,29 @@ OBJS	=	${SRC:%.cpp=%.o}
 
 # ------------------------------------------------------------------------------
 
+READY	=	Webserv is ready
+SWEPT	=	Directory was cleaned
+_GREEN	=	\e[32m
+_YELLOW	=	\e[33m
+_PURPLE	=	\e[0;35m
+_CYAN	=	\e[0;36m
+_END	=	\e[33m
+
+# ------------------------------------------------------------------------------
+
 %.o:		%.cpp	${HDR}
 			@${CC} ${FLAGS1} ${FLAGS2} -c -o $@ $<
 
 ${NAME}:	${OBJS}
 			@${CC} ${FLAGS1} ${FLAGS2} ${OBJS} -o ${NAME}
+			@printf "${_CYAN}${READY}${_END}\n"
 #			@${MAKE} clean
 
 all:		${NAME}
 
 clean:
 			@${RM} ${OBJS}
+			@printf "${_PURPLE}${SWEPT}${_END}\n"
 
 fclean:		clean
 			@${RM} ${NAME} webserv.logs

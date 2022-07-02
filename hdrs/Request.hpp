@@ -26,7 +26,7 @@ private:
 	char								_requestStatus;
 	char								_transferEncoding;
 
-	std::string	getChunck(std::string const &src);
+	std::string	getChunk(std::string const &src);
 
 public:
 	Request() : _requestStatus(0x0), _transferEncoding(0x0) {};

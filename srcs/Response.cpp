@@ -34,39 +34,32 @@ Response::Response(Params &config, Request *request)
 
 void	Response::process()
 {
-	std::string	path = _request->getPath();
 	std::string	param;
 
-	if (path.find("bootstrap") != std::string::npos)
+	switch (action_to_do(param))
 	{
-		_body = utils::readFile(utils::trim(path, "./"));
-		craftResponse();
-	}
-//	else if (path.find("favicon") != std::string::npos)
-//		_body = utils::readFile("");
-	else
-	{
-		switch (action_to_do(param))
-		{
-			case invalid:
-				_body = utils::readFile(_config.root + _config.error_pages_dir + std::to_string(_statusCode) + ".html");
-				if (_body.empty())
-					_body = utils::readFile("error_pages/" + std::to_string(_statusCode) + ".html");
-				craftResponse();
-				break;
-			case autoindexation:
-				_response = getCgiResponse(_config.locations.at(param).at("cgi"),utils::trim(_request->getPath(), "/"));
-				break;
-			case redirection:
-				craftResponse();
-				break;
-			case cgi:
-				_response = getCgiResponse(_config.locations.at(_request->getPath()).at("cgi"));
-				break;
-			case other:
-				craftResponse();
-				break;
-		}
+		case bootstrap:
+			_body = utils::readFile(utils::trim(_request->getPath(), "./"));
+			craftResponse();
+			break;
+		case invalid:
+			_body = utils::readFile(_config.root + _config.error_pages_dir + std::to_string(_statusCode) + ".html");
+			if (_body.empty())
+				_body = utils::readFile("error_pages/" + std::to_string(_statusCode) + ".html");
+			craftResponse();
+			break;
+		case autoindexation:
+			_response = getCgiResponse(_config.locations.at(param).at("cgi"),utils::trim(_request->getPath(), "/"));
+			break;
+		case redirection:
+			craftResponse();
+			break;
+		case cgi:
+			_response = getCgiResponse(_config.locations.at(_request->getPath()).at("cgi"));
+			break;
+		case other:
+			craftResponse();
+			break;
 	}
 	utils::logging(	_request->getMethod()				+ " " +
 					_request->getPath()					+ " " +
@@ -77,6 +70,8 @@ void	Response::process()
 
 int			Response::action_to_do(std::string &param)
 {
+	if (_request->getPath().find("bootstrap") != std::string::npos)
+		return bootstrap;
 	if (is_redirect())
 		return redirection;
 	if (!(param = is_autoindex()).empty())

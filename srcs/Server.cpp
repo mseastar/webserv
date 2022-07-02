@@ -31,7 +31,7 @@ Server::Server(char **av)
 
 		updateEvent(tmp->getServerFd(), EVFILT_READ, EV_ADD, 0, 0, nullptr);
 	}
-	_evList.resize(confParams.size());
+//	_evList.resize(confParams.size());
 }
 
 Server::Server(Server const &src)
@@ -66,7 +66,8 @@ void	Server::runServer()
 
 	while (true)
 	{
-		numberOfEvents = kevent();
+		if ((numberOfEvents = kevent()) <= 0)
+			continue;
 		accept(numberOfEvents);
 //		handle();
 	}
@@ -77,20 +78,21 @@ int		Server::kevent()
 	std::string			dots[4] = {"", ".", "..", "..."};
 	int					eventsNum = 0, n = -1;
 
-	while (eventsNum == 0)
-	{
-		std::cout << YELLOW << "\33[2K\rWaiting for connection" << dots[++n] << RESET << std::flush;
-		if (n == 3)
-			n = -1;
-		eventsNum = ::kevent(_kq, nullptr, 0, &*_evList.begin(), int(_evList.size()), &_timeout);;
-	}
-	std::cout << "\33[2K\r"; // cleans the terminal line
+//	while (eventsNum == 0)
+//	{
+//		std::cout << YELLOW << "\33[2K\rWaiting for connection" << dots[++n] << RESET << std::flush;
+//		if (n == 3)
+//			n = -1;
+//	eventsNum = ::kevent(_kq, nullptr, 0, &*_evList.begin(), int(_evList.size()), &_timeout);
+	eventsNum = ::kevent(_kq, nullptr, 0, _test, 1024, &_timeout);
+//	}
+//	std::cout << "\33[2K\r"; // cleans the terminal line
 
-	if (eventsNum == -1)
-	{
-		utils::logging(strerror(errno), utils::error);
-		throw KeventException();
-	}
+//	if (eventsNum == -1)
+//	{
+//		utils::logging(strerror(errno), utils::error);
+//		throw KeventException();
+//	}
 
 	return eventsNum;
 }
@@ -102,54 +104,154 @@ void	Server::accept(int numberOfEvents)
 
 	for (int i = 0; i < numberOfEvents; ++i)
 	{
-		if (_configs.find((int)_evList[i].ident) != _configs.end())
-			acceptConnection((int)_evList[i].ident);
+		if (_configs.find((int)_test[i].ident) != _configs.end())
+			acceptConnection((int)_test[i].ident);
 		else
 		{
-			Clients::iterator it = _clients.find((int)_evList[i].ident);
+			Clients::iterator it = _clients.find((int)_test[i].ident);
 			if (it != _clients.end())
 				client = it->second;
 
 			if (client == nullptr)
 			{
 				utils::logging("Client not found", utils::serverInfo);
-				updateEvent((int)_evList[i].ident, EVFILT_READ, EV_DELETE, 0, 0, nullptr);
-				updateEvent((int)_evList[i].ident, EVFILT_WRITE, EV_DELETE, 0, 0, nullptr);
-				close((int)_evList[i].ident);
+				updateEvent((int)_test[i].ident, EVFILT_READ, EV_DELETE, 0, 0, nullptr);
+				updateEvent((int)_test[i].ident, EVFILT_WRITE, EV_DELETE, 0, 0, nullptr);
+				close((int)_test[i].ident);
 				continue;
 			}
 			else
 			{
-				if (_evList[i].flags & EV_ERROR) // manage errors here
+				if (_test[i].flags & EV_ERROR) // manage errors here
 				{
 					std::cout << "EV_ERROR" << std::endl;
 					continue; // set status code to 50*
 				}
-				if (_evList[i].flags & EV_EOF) // client disconnects
+				if (_test[i].flags & EV_EOF) // client disconnects
 				{
-					std::cout << "EV_EOF: " << _evList[i].ident << std::endl;
+					std::cout << "EV_EOF: " << _test[i].ident << std::endl;
 					dropConnection(client);
 					continue;
 				}
 
-				if (_evList[i].filter == EVFILT_READ && receiver(client, _evList[i].data))
+				if (_test[i].filter == EVFILT_READ && receiver(client, _test[i].data))
 				{
-					std::cout << "READ: " << _evList[i].ident << std::endl;
+					std::cout << "READ: " << _test[i].ident << std::endl;
 
-					updateEvent((int)_evList[i].ident, EVFILT_READ, EV_DISABLE, 0, 0, nullptr);
-					updateEvent((int)_evList[i].ident, EVFILT_WRITE, EV_ENABLE, 0, 0, nullptr);
+					updateEvent((int)_test[i].ident, EVFILT_READ, EV_DISABLE, 0, 0, nullptr);
+					updateEvent((int)_test[i].ident, EVFILT_WRITE, EV_ENABLE, 0, 0, nullptr);
 				}
-				else if (_evList[i].filter == EVFILT_WRITE)
+//				else if (_test[i].filter == EVFILT_WRITE && !sender(client, _test[i].data))
+				else if (_test[i].filter == EVFILT_WRITE && !sender_test(client, _test[i].data))
 				{
-					if (!sender(client, _evList[i].data))
-					{
-						updateEvent((int) _evList[i].ident, EVFILT_READ, EV_ENABLE, 0, 0, nullptr);
-						updateEvent((int) _evList[i].ident, EVFILT_WRITE, EV_DISABLE, 0, 0, nullptr);
-					}
+					updateEvent((int) _test[i].ident, EVFILT_READ, EV_ENABLE, 0, 0, nullptr);
+					updateEvent((int) _test[i].ident, EVFILT_WRITE, EV_DISABLE, 0, 0, nullptr);
 				}
 			}
 		}
 	}
+}
+
+bool	Server::sender_test(Client *cl, long availBytes)
+{
+	size_t			actual_sent;
+	size_t			attempt_to_send;
+	size_t			remaining;
+	static size_t	total_sent;
+
+	std::string	host	= _requests[cl->getAcceptFd()]->getHost();
+	std::string	port	= _requests[cl->getAcceptFd()]->getPort();
+	size_t		i		= 0;
+	for (; i < _configs.size(); ++i)
+		if (_configs[int(i)].host == host && std::to_string(_configs[int(i)].port) == port)
+			break ;
+	Response	response(_configs[int(i)], _requests[cl->getAcceptFd()]);
+	response.process();
+	std::string	resp = response.getResponse();
+
+	if (availBytes > 70000)
+		availBytes = 70000;
+	else if (!availBytes)
+		availBytes = 64;
+	remaining = resp.size() + 1 - total_sent;
+	if (availBytes >= remaining)
+		attempt_to_send = remaining;
+	else
+		attempt_to_send = availBytes;
+
+	actual_sent	= send(cl->getAcceptFd(), total_sent + resp.c_str(), attempt_to_send, 0);
+	std::cout << actual_sent << std::endl;
+	total_sent += actual_sent;
+
+	if (total_sent >= resp.size() + 1)
+	{
+		std::cout	<< "SEND:	[" << cl->getAcceptFd()	<< "]; "
+					<< "TOTAL:	[" << total_sent		<< "]; "
+					<< "REQ:	[" << resp.size() + 1	<< "]"
+					<< std::endl;
+		total_sent = 0;
+		remaining = 0;
+		delete _requests[cl->getAcceptFd()];
+		_requests.erase(_requests.find(cl->getAcceptFd()));
+		return false;
+	}
+	return true;
+}
+
+bool	Server::sender(Client *cl, long availBytes)
+{
+	if (cl == nullptr)
+		return false;
+	static	size_t	total_sent;
+
+	size_t	actual_sent		= 0;	// Actual number of bytes sent as returned by send()
+	size_t	attempt_sent	= 0;	// Bytes that we're attempting to send now
+	size_t	remaining		= 0;	// Size of data left to send for the item
+	bool	disconnect		= false;
+	u_int	i				= 0;
+
+	if (availBytes > 1500)
+		availBytes = 1500;
+	else if (!availBytes)
+		availBytes = 64;
+
+	std::cout << "SEND: " << cl->getAcceptFd() << std::endl;
+
+	std::string	host	= _requests[cl->getAcceptFd()]->getHost();
+	std::string	port	= _requests[cl->getAcceptFd()]->getPort();
+	for (; i < _configs.size(); ++i)
+		if (_configs[int(i)].host == host && std::to_string(_configs[int(i)].port) == port)
+			break ;
+	Response	response(_configs[int(i)], _requests[cl->getAcceptFd()]);
+	response.process();
+
+	remaining	= response.getRespLength() - total_sent;
+	if (availBytes >= remaining)
+		attempt_sent = remaining;
+	else
+		attempt_sent = availBytes;
+
+	actual_sent	= send(cl->getAcceptFd(), total_sent + response.getResponse().c_str(), attempt_sent, 0);
+	std::cout << actual_sent << std::endl;
+	total_sent += actual_sent;
+
+	if (actual_sent < 0)
+	{
+		total_sent = 0;
+		std::cout << "DROPPED" << std::endl;
+		delete _requests[cl->getAcceptFd()];
+		dropConnection(cl);
+		return false;
+	}
+	if (total_sent >= response.getRespLength())
+	{
+		std::cout << "TOTAL: [" << total_sent << "] RESP_LENGTH: [" << response.getRespLength() << "]" << std::endl;
+		total_sent = 0;
+		delete _requests[cl->getAcceptFd()];
+		return false;
+	}
+
+	return true;
 }
 
 bool	Server::receiver(Client *cl, long dataLen)
@@ -185,74 +287,9 @@ bool	Server::receiver(Client *cl, long dataLen)
 	if (!_requests[cl->getAcceptFd()]->is_valid())
 		return false;
 
-	utils::print_rawRequest(_requests[cl->getAcceptFd()]->getRawRequest());
+//	utils::print_rawRequest(_requests[cl->getAcceptFd()]->getRawRequest());
 //	utils::print_shortRequest(_requests[cl->getAcceptFd()]);
 //	utils::print_fullRequest(_requests[cl->getAcceptFd()]->getRequest());
-
-	return true;
-}
-
-bool	Server::sender(Client *cl, long availBytes)
-{
-	if (cl == nullptr)
-		return false;
-	static	size_t	total_sent;
-
-	size_t	actual_sent		= 0;	// Actual number of bytes sent as returned by send()
-	size_t	attempt_sent	= 0;	// Bytes that we're attempting to send now
-	static size_t	remaining		= 0;	// Size of data left to send for the item
-	bool	disconnect		= false;
-	u_int	i				= 0;
-
-	if (availBytes > 1500)
-		availBytes = 1500;
-	else if (!availBytes)
-		availBytes = 64;
-
-
-	std::string	host	= _requests[cl->getAcceptFd()]->getHost();
-	std::string	port	= _requests[cl->getAcceptFd()]->getPort();
-
-	for (; i < _configs.size(); ++i)
-		if (_configs[int(i)].host == host && std::to_string(_configs[int(i)].port) == port)
-			break ;
-
-	Response	response(_configs[int(i)], _requests[cl->getAcceptFd()]);
-	response.process();
-
-	remaining	= response.getRespLength() - total_sent;
-//	if (!remaining)
-//		return false;
-
-	if (availBytes >= remaining)
-		attempt_sent = remaining;
-	else
-		attempt_sent = availBytes;
-
-	actual_sent	= send(cl->getAcceptFd(), total_sent + response.getResponse().c_str(), attempt_sent, 0);
-	std::cout << actual_sent << std::endl;
-	total_sent += actual_sent;
-
-	if (actual_sent < 0)
-		disconnect = true;
-
-//	std::cout << "TOTAL SENT: " << total_sent << " RESP LENGTH: " << response.getRespLength() << std::endl;
-//	std::cout << "SEND: " << cl->getAcceptFd() << std::endl;
-
-	/*
-	 * Disconnect the client if 0 bytes left to send
-	 * Should have been handled (but later will be)
-	 */
-	if (disconnect)
-	{
-		std::cout << "DISCONNECTED" << cl->getAcceptFd() << std::endl;
-
-		total_sent = 0;
-		delete _requests[cl->getAcceptFd()];
-		dropConnection(cl);
-		return false;
-	}
-	delete _requests[cl->getAcceptFd()];
 
 	return true;
 }
@@ -271,12 +308,12 @@ void	Server::acceptConnection(int socketFd)
 	fcntl(clientFd, F_SETFL, O_NONBLOCK);
 
 	std::string	ip = _configs[socketFd].host + ":" + std::to_string(_configs[socketFd].port);
-	_clients[clientFd] = new Client(socketFd, ip, clientFd, clientAddress);
+	_clients.insert(std::pair<int, Client *>(clientFd, new Client(socketFd, ip, clientFd, clientAddress)));
 
 	updateEvent(clientFd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, nullptr);
 	updateEvent(clientFd, EVFILT_WRITE, EV_ADD | EV_DISABLE, 0, 0, nullptr);
 
-//	utils::logging("New connection on " + _clients[clientFd]->getIp() + " [" + std::to_string(clientFd) + "]", utils::serverInfo);
+	utils::logging("New connection on " + _clients[clientFd]->getIp() + " [" + std::to_string(clientFd) + "]", utils::serverInfo);
 }
 
 void	Server::updateEvent(int socketFD, short filter, ushort flags, uint fflags, int data, void *udata, bool add)
@@ -304,9 +341,14 @@ void	Server::dropConnection(Client *cl, bool erase)
 	close(cl->getAcceptFd());
 
 	if (erase)
-		_clients.erase(cl->getAcceptFd());
+	{
+//		delete _clients.at(cl->getAcceptFd());
+		_clients.erase(_clients.find(cl->getAcceptFd()));
+	}
+//	if (_requests.find(cl->getAcceptFd()) != _requests.end())
+//		delete _requests[cl->getAcceptFd()];
 
-//	utils::logging("Client " + cl->getIp() + " disconnected [" + std::to_string(cl->getAcceptFd()) + "]", utils::serverInfo);
+	utils::logging("Client " + cl->getIp() + " disconnected [" + std::to_string(cl->getAcceptFd()) + "]", utils::serverInfo);
 
 	delete cl;
 }

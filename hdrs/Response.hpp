@@ -14,6 +14,7 @@ class Response {
 
 	enum	Action {
 		invalid,
+		bootstrap,
 		autoindexation,
 		redirection,
 		cgi,
@@ -49,7 +50,7 @@ public:
 //	virtual ~Response();
 
 	std::string	getResponse() const { return _response; };
-	size_t		getRespLength() const { return _response.size(); };
+	size_t		getRespLength() const { return _response.size() + 1; };
 
 	void		process();
 
