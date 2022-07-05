@@ -2,8 +2,7 @@
 // Created by Grubbly Ernesto on 6/7/22.
 //
 
-#ifndef ZERO_WEBSERV_SERVER_HPP
-# define ZERO_WEBSERV_SERVER_HPP
+#pragma once
 
 # include "Utils.hpp"
 # include "SimpSocket.hpp"
@@ -12,24 +11,49 @@
 # include "Config.hpp"
 
 # define TIMEOUT 1
-# define BACKLOG 100
-# define BUFF_SIZE 65000
 
 struct Server {
+	struct	Client {
+		int			socketFd;
+		std::string	ip;
+		int			acceptFd;
+		sockaddr_in	address;
+
+		Client(int socketFd, std::string const &ip, int acceptFd, sockaddr_in clAddr)
+			: socketFd(socketFd), ip(ip), acceptFd(acceptFd), address(clAddr) {};
+
+		int			getSocketFd()	const { return socketFd; };
+		int			getAcceptFd()	const { return acceptFd; };
+		sockaddr_in	getAddress ()	const { return address; };
+		std::string	getIp ()		const { return ip; };
+	};
+
 	typedef std::vector<SimpSocket *>	Sockets;
+	typedef std::map<int, Client*>		Clients;
 	typedef std::map<int, Request *>	Requests;
 	typedef std::map<int, Params>		Configs;
-private:
-//	char			**envp;
-	Sockets			_sockets;
-	Requests		_requests;
-	Configs			_configs;
-	fd_set			_currentSockets, _readSockets, _writeSockets;
-	struct timeval	_timeout;
+	typedef std::vector<struct kevent>	Kevent;
 
-	void		accepter(struct sockaddr_in &, int &);
-	void		handler(int);
-//	void		responder(int, Request const *);
+private:
+	Configs			_configs;
+	Sockets			_sockets;
+	Clients			_clients;
+	Requests		_requests;
+//	Kevent			_chList, _evList; // events we want to monitor, events that were triggered
+	struct kevent	_evList[1024]; // events that were triggered
+
+	struct timespec	_timeout = { TIMEOUT, 0 };
+	int				_kq;
+
+	void		updateEvent(int socketFD, short filter, ushort flags, uint fflags, int data, void *udata, bool = false);
+	void		acceptConnection(int);
+	void		dropConnection(Client *, bool = true);
+	int			kevent();
+	void		accept(int);
+//	void		handle();
+	bool		receiver(Client *cl, long dataLen);
+	bool		sender(Client *cl, size_t availBytes);
+	bool		sender_test(Client *cl, size_t availBytes);
 
 public:
 	Server(char **av);
@@ -43,15 +67,22 @@ public:
 
 	struct	ConfigException: std::exception {
 		const char	*what() const throw() {
-			return "[Exception] Bad Config: check logs file for more info";
+			return "[Exception] Bad Config: check logs for more info";
 		}
 	};
 	struct	SocketException: std::exception {
 		const char	*what() const throw() {
-			return "[System Exception] Socket: check logs file for more info";
+			return "[System Exception] Socket: check logs for more info";
+		}
+	};
+	struct	KqueueException: std::exception {
+		const char	*what() const throw() {
+			return "[System Exception] kqueue(): check logs for more info";
+		}
+	};
+	struct	KeventException: std::exception {
+		const char	*what() const throw() {
+			return "[System Exception] kevent(): check logs for more info";
 		}
 	};
 };
-
-
-#endif //ZERO_WEBSERV_SERVER_HPP

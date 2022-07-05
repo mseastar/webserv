@@ -8,5 +8,6 @@ if not get_auth():
 else:
     print("""HTTP/1.1 301 Moved Permanently\r
     Server: {server}\r
-    Location: / \r
-    """)
+    Location: http://127.0.0.1:8080/profile \r
+    Content-Length: 0\r
+    Content-Type: text/html\r\n\r\n""")

@@ -9,7 +9,6 @@ if not get_auth():
                                     cont_len=len(main_page.encode('utf-8')),
                                     cont_type=os.environ['CONTENT_TYPE']) + "\r\n\r\n" + main_page, end='')
 else:
-    body = "<body>\n"
     conn = sqlite3.connect("cgi-bin/web.db")
     cur = conn.cursor()
     login = os.environ.get('LOGIN')
@@ -17,13 +16,21 @@ else:
     res = cur.fetchone()
     id = res[0]
     auth_key = res[1]
+    os.environ.pop('LOGIN')
+    body = get_body('Выход')
     if auth_key is None:
-        body += "<h2>КОГО НАБЕАТЬ ПЫТАЕШЬСЯ ТЫ НЕ ЗАЛОГИНЕН БАН НАХУЙ</h2>"
-        main_page = get_head_html('БАН') + body + "</body>\n</html>"
+        body += """<div class="alert alert-danger alert-dismissible fade show" role="alert">
+  <strong>Вы еще не вошли в систему </strong>
+  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>"""
+        main_page = get_head_html('Ошибка') + body + "</body>\n</html>"
     else:
         cur.execute(f"""UPDATE users SET auth_key = NULL WHERE id = {id};""")
         conn.commit()
-        body += "<h1>Вы успешно вышли из системы!</h1>"
+        body += """<div class="alert alert-success alert-dismissible fade show" role="alert">
+  <strong>Успешно вышли из системы </strong>
+  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>"""
         main_page = get_head_html('Выход из системы') + body + "</body>\n</html>"
 
     print(get_response().format(status="200 OK",

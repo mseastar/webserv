@@ -24,6 +24,8 @@ def get_head_html(title):
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{title}</title>
+    <link rel="stylesheet" href="/bootstrap5/css/bootstrap.min.css" />
+    <script src="/bootstrap5/js/bootstrap.min.js"></script>
 </head>
 """
     return head
@@ -49,11 +51,13 @@ Content-Length: {cont_len}"""
     return tmp
 
 
-def get_body():
+def get_body(header):
     tmp = """<body>
-    <p>Работаем на сервере: {serv}</p>
+    <h1 class="display-3" style="margin-left:10px;"> {header} </h1>
 {nav}
-    """.format(nav=get_nav().format(login=os.environ.get('LOGIN')), serv=os.environ['SERVER_NAME'])
+   """.format(nav=get_nav().format(login=os.environ.get('LOGIN'),
+                                   server=os.environ['SERVER_NAME']),
+              header=header)
     return tmp
 
 
@@ -66,13 +70,13 @@ def get_auth():
             dicti[i[0].strip()] = i[1].strip()
     if not all([dicti.get('login'), dicti.get('auth-key')]):
         return False
-    conn = sqlite3.connect("cgi-bin/web.db")
-    cur = conn.cursor()
-    cur.execute(f"SELECT users.auth_key FROM users WHERE users.login = '{dicti.get('login')}';")
-    res = cur.fetchone()
-    if res is None or res[0] != dicti.get('auth-key'):
-        return False
-    os.environ['LOGIN'] = dicti.get('login')
+    with sqlite3.connect("cgi-bin/web.db") as conn:
+        cur = conn.cursor()
+        cur.execute(f"SELECT users.auth_key FROM users WHERE users.login = '{dicti.get('login')}';")
+        res = cur.fetchone()
+        if res is None or res[0] != dicti.get('auth-key'):
+            return False
+        os.environ['LOGIN'] = dicti.get('login')
     return True
 
 
@@ -80,3 +84,12 @@ def generate_random_string():
     letters = string.ascii_letters
     rand_string = ''.join(random.choice(letters) for i in range(32))
     return rand_string
+
+def check_uniq(img_path):
+    with sqlite3.connect("cgi-bin/web.db") as conn:
+        cur = conn.cursor()
+        cur.execute(f"SELECT * FROM posts WHERE img_path='{img_path}';")
+        result = cur.fetchone()
+        if result is None:
+            return True
+    return False

@@ -3,7 +3,6 @@
 //
 
 #include "../hdrs/Response.hpp"
-
 const std::map<int, std::string>	Response::_statusPhrase = Response::_createMap();
 
 std::map<int, std::string> Response::_createMap()
@@ -27,96 +26,116 @@ std::map<int, std::string> Response::_createMap()
 	return m;
 }
 
-Response::Response(Params const &config, Request const *request)
+Response::Response(Params &config, Request *request)
 	: _statusCode(200), _config(config), _request(request)
 {
 }
 
-void	Response::process()
+int		Response::process()
 {
-	std::string	path = _request->getPath();
-	std::string	autoindex;
+	std::string	param;
 
-	if (path.find("bootstrap") != std::string::npos)
+	_caseNum = 0;
+	switch (action_to_do(param))
 	{
-		_body = utils::readFile(utils::trim(path, "./"));
-		craftResponse();
+		case bootstrap:
+			_body = readFile(trim(_request->getPath(), "./"));
+			break;
+		case autoindexation:
+			getCgiResponse(_config.locations.at(param).at("cgi"),trim(_request->getPath(), "/"));
+            if (_statusCode == 200)
+			    break;
+		case cgi:
+            if (_statusCode == 200)
+                getCgiResponse(_config.locations.at(_request->getPath()).at("cgi"));
+            if (_statusCode != 200)
+                _caseNum = invalid;
+            else
+                break;
+		case invalid:
+			_body = readFile(_config.root + _config.error_pages_dir + std::to_string(_statusCode) + ".html");
+			if (_body.empty())
+				_body = readFile("error_pages/" + std::to_string(_statusCode) + ".html");
+			break;
+		case redirection:
+		case other:
+			break;
 	}
-//	else if (path.find("favicon") != std::string::npos)
-//		_body = utils::readFile("");
-	else if (!(autoindex = is_autoindex()).empty())
-		_response = getCgiResponse(_config.locations.at(autoindex).at("cgi"),
-								   utils::trim(_request->getPath(), "/"));
-	else if (is_redirect())
-		craftResponse();
-	else if (is_cgi())
-		_response = getCgiResponse(_config.locations.at(_request->getPath()).at("cgi"));
-	else if (!is_valid())
-	{
-		_body = utils::readFile(_config.root + _config.error_pages_dir + std::to_string(_statusCode) + ".html");
-		if (_body.empty())
-			_body = utils::readFile("error_pages/" + std::to_string(_statusCode) + ".html");
-		craftResponse();
-	}
+	craftResponse();
 
-	utils::logging(	_request->getMethod()				+ " " +
+	logging(	_request->getMethod()				+ " " +
 					_request->getPath()					+ " " +
 					std::to_string(_statusCode)		+ " " +
 					_statusPhrase.at(_statusCode)	+ " " +
 					std::to_string(_body.size()));
+
+	return _caseNum;
 }
 
-
-std::string	Response::getCgiResponse(std::string const &path, std::string const &filename) const
+int			Response::action_to_do(std::string &param)
 {
-	int		pid;
-	int		fd[2];
-	char	buf[10000];
-	char	**tmp_env;
-
-	bzero(&buf, 10000);
-	tmp_env = getCgiEnv(path, filename);
-//	for (int i = 0; tmp_env[i]; ++i)
-//		std::cout << tmp_env[i] << std::endl;
-//	exit(1);
-	pipe(fd);
-	pid = fork();
-	if (!pid)
-	{
-		dup2(fd[1], STDOUT_FILENO);
-		close(fd[1]);
-		close(fd[0]);
-		if (execve(("./cgi-bin/" + path).c_str(), nullptr, tmp_env) <= 0)
-			exit(3);
-	}
+	if (_request->getPath().find("bootstrap") != std::string::npos)
+		return _caseNum = bootstrap;
+	if (is_redirect())
+		return _caseNum = redirection;
+	if (!(param = is_autoindex()).empty())
+		return autoindexation;
+	if (!is_valid())
+		return _caseNum = invalid;
 	else
-	{
-		close(fd[1]);
-		int status;
-		waitpid(-1, &status, 0);
-		read(fd[0], &buf, 10000);
-		close(fd[0]);
-		for (int i = 0; tmp_env[i]; ++i)
-			free(tmp_env[i]);
-		free(tmp_env);
-	}
-//	std::cout << buf << std::endl;
-	return buf;
+		if (is_cgi())
+			return cgi;
+	return _caseNum = other;
 }
+
+void    Response::getCgiResponse(std::string const &path, std::string const &filename)
+{
+    int		pid;
+    int		fd[2];
+    int status;
+    char	buf[10000];
+    char	**tmp_env;
+    std::string buf_ret;
+
+    bzero(&buf, 10000);
+    tmp_env = getCgiEnv(path, filename);
+    pipe(fd);
+    pid = fork();
+    if (!pid)
+    {
+        dup2(fd[1], STDOUT_FILENO);
+        close(fd[1]);
+        close(fd[0]);
+        if (execve(("./cgi-bin/" + path).c_str(), nullptr, tmp_env) <= 0)
+            exit(255);
+    }
+    else {
+        close(fd[1]);
+        while (read(fd[0], &buf, 10000) > 0) {
+            _response += buf;
+            bzero(&buf, 10000);
+        }
+        waitpid(pid, &status, 0);
+        close(fd[0]);
+        for (int i = 0; tmp_env[i]; ++i)
+            free(tmp_env[i]);
+        free(tmp_env);
+    }
+    if (WEXITSTATUS(status) != 0)
+        _statusCode = WEXITSTATUS(status) ? 500 : 200;
+}
+
 
 char	**Response::getCgiEnv(std::string const &path, std::string const &filename) const
 {
 	char						**env;
 	std::vector<std::string>	envp_vec;
-	std::vector<std::string>	tmp = utils::split(path, "?");
+	std::vector<std::string>	tmp = split(path, "?");
 
 //	envp_vec.push_back("PATH=" + std::string(std::getenv("PATH")));
 	envp_vec.push_back("CONTENT_TYPE=" + _request->getAccept());
 	envp_vec.push_back("CONTENT_LENGTH=" + std::to_string(1000));
 	envp_vec.push_back("HTTP_USER_AGENT=" + _request->getRequest().at("User-Agent"));
-//	if (tmp.size() < 2)
-//		envp_vec.push_back("QUERY_STRING=");
-//	else
 	envp_vec.push_back("QUERY_STRING=" + _request->getBody());
 //	envp_vec.push_back("REMOTE_ADDR=" + _request.get());
 	envp_vec.push_back("REMOTE_HOST=" + _request->getHost());
@@ -141,49 +160,46 @@ char	**Response::getCgiEnv(std::string const &path, std::string const &filename)
 bool	Response::is_cgi()
 {
 	try {
-		if (!_config.locations.at(utils::split(_request->getPath(), "?").at(0)).at("cgi").empty())
+		if (_config.locations[_request->getPath()].empty())
+			return false;
+		if (_config.locations[_request->getPath()]["cgi"].empty())
+			return false;
+		if (!_config.locations.at(_request->getPath()).at("cgi").empty())
 			return true;
 		return false;
 	}
-	catch (...) {
-		return false;
-	}
+	catch (...) { return false; }
 }
 
 bool	Response::is_redirect()
 {
 	try {
-		if (!_config.locations.at(_request->getPath()).at("redirect").empty())
+		if (_config.locations[_request->getPath()].empty())
+			return false;
+		if (!_config.locations.at(_request->getPath())["redirect"].empty())
 			return _statusCode = 307;
 		return false;
 	}
-	catch (...) {
-		return false;
-	}
+	catch (...) { return false; }
 }
 
 std::string	Response::is_autoindex()
 {
 	try {
-		std::vector<std::string>	tmp = utils::split(_request->getPath(), "/");
+		std::vector<std::string>	tmp = split(trim(_request->getPath(), "/"), "/");
 		std::string					str;
 
 		for (u_int i = 0; i < tmp.size(); ++i)
 		{
-			try {
-				str += "/" + tmp[i];
-				if (_config.locations.at(str).at("autoindex") == "on")
-					return str;
-			}
-			catch (...) {
-				str += "/" + tmp[i];
-			}
+			str += "/" + tmp[i];
+			if (_config.locations[str].empty())
+				continue;
+			if (_config.locations[str]["autoindex"] == "on")
+				return str;
 		}
 		return "";
 	}
-	catch (...) {
-		return "";
-	}
+	catch (...) { return ""; }
 }
 
 bool	Response::is_valid()
@@ -192,18 +208,20 @@ bool	Response::is_valid()
 
 //	checks if requested PATH exists
 	try {
+		if (_config.locations[_request->getPath()].empty())
+			return !(_statusCode = 404);
 		confLocation = _config.locations.at(_request->getPath());
 	}
 	catch (...) { return !(_statusCode = 404); }
 
 //	checks if requested METHOD allowed
 	try {
-		if (_request->getMethod() != "GET" && _request->getMethod() != "POST" && _request->getMethod() != "DELETE")
-		{
-			std::cout << "Here" << std::endl;
-			std::cout << _request->getMethod() << std::endl;
+		if (_request->getMethod() != "GET" && _request->getMethod() != "HEAD" &&
+			_request->getMethod() != "POST" && _request->getMethod() != "PUT" &&
+			_request->getMethod() != "DELETE")
 			return !(_statusCode = 501);
-		}
+//		if (_request->getMethod() == "HEAD" && confLocation.at("methods").find("GET") != std::string::npos)
+//			return true;
 		if (confLocation.at("methods").find(_request->getMethod()) == std::string::npos)
 			return !(_statusCode = 405);
 	}
@@ -216,8 +234,21 @@ bool	Response::is_valid()
 
 void	Response::craftResponse()
 {
-	craftHeader();
-	_response = _header + _body;
+	if (_caseNum)
+		craftHeader();
+	else
+	{
+		_header	= split(_response, "\r\n\r\n", 1).at(0) + "\r\n\r\n";
+		_body	= split(_response, "\r\n\r\n", 1).size() == 2 ? split(_response, "\r\n\r\n", 1).at(1) : "";
+	}
+
+	if (_request->getMethod() != "HEAD")
+		_response = _header + _body;
+	else
+	{
+		_response = _header;
+		_body.clear();
+	}
 }
 
 void	Response::craftHeader()
@@ -226,15 +257,17 @@ void	Response::craftHeader()
 			  std::to_string(_statusCode) + " " +
 			  _statusPhrase.at(_statusCode) + "\r\n" +
 			  "Server: " + _config.server_name + "\r\n" +
-			  "Connection: Closed\r\n" +
+			  "Connection: keep-alive\r\n" +
 			  "Content-Length: " + std::to_string(_body.size()) + "\r\n";
 	if (_statusCode == 301 || _statusCode == 307)
 	{
 		std::map<std::string, std::string>	tmp = _request->getRequest();
 		_header += std::string("Location: ") + "http://" + tmp.at("Host") + "/" +
-				utils::trim(_config.locations.at(_request->getPath()).at("redirect"), "/") + "\r\n";
+				trim(_config.locations.at(_request->getPath()).at("redirect"), "/") + "\r";
 //		std::cout << _header << std::endl;
 	}
-	_header += "Content-Type: " + _request->getAccept() + "\r\n\r\n";
-
+	if (_request->getPath().find("css") != std::string::npos)
+		_header += "Content-Type: text/css\r\n\r\n";
+	else
+		_header += "Content-Type: " + _request->getAccept() + "\r\n\r\n";
 }
