@@ -15,6 +15,7 @@ class Response {
 public:
 	enum	Action {
 		invalid = 1,
+        image,
 		bootstrap,
 		autoindexation,
 		redirection,
@@ -43,6 +44,7 @@ private:
 	void		craftResponse();
 	void        getCgiResponse(const std::string &scriptName, std::string const &filename = "");
 	char		**getCgiEnv(std::string const &scriptName, std::string const &filename = "") const;
+    int        getImageBytes(std::string const &str, const std::string &format);
 
 public:
 	Response(Params &, Request *);

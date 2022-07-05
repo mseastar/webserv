@@ -31,9 +31,26 @@ Response::Response(Params &config, Request *request)
 {
 }
 
+
+int Response::getImageBytes(std::string const &str, const std::string &format) {
+    std::ifstream fin(trim(_request->getPath(), "/"));
+
+    if (!fin.is_open())
+        return 0;
+    char c;
+    while (!fin.eof())
+    {
+        fin.read(&c, 1);
+        _body += c;
+    }
+    fin.close();
+    return 1;
+}
+
 int		Response::process()
 {
 	std::string	param;
+
 
 	_caseNum = 0;
 	switch (action_to_do(param))
@@ -41,10 +58,16 @@ int		Response::process()
 		case bootstrap:
 			_body = readFile(trim(_request->getPath(), "./"));
 			break;
+        case image:
+            if (getImageBytes(_request->getPath(), ".png"))
+                break;
+            else
+                _statusCode = 404;
 		case autoindexation:
-			getCgiResponse(_config.locations.at(param).at("cgi"),trim(_request->getPath(), "/"));
             if (_statusCode == 200)
-			    break;
+                getCgiResponse(_config.locations.at(param).at("cgi"), trim(_request->getPath(), "/"));
+            if (_statusCode == 200)
+                break;
 		case cgi:
             if (_statusCode == 200)
                 getCgiResponse(_config.locations.at(_request->getPath()).at("cgi"));
@@ -74,6 +97,8 @@ int		Response::process()
 
 int			Response::action_to_do(std::string &param)
 {
+    if (_request->getPath().find(".png") != std::string::npos)
+        return _caseNum = image;
 	if (_request->getPath().find("bootstrap") != std::string::npos)
 		return _caseNum = bootstrap;
 	if (is_redirect())
@@ -132,27 +157,18 @@ char	**Response::getCgiEnv(std::string const &path, std::string const &filename)
 	std::vector<std::string>	envp_vec;
 	std::vector<std::string>	tmp = split(path, "?");
 
-//	envp_vec.push_back("PATH=" + std::string(std::getenv("PATH")));
 	envp_vec.push_back("CONTENT_TYPE=" + _request->getAccept());
-	envp_vec.push_back("CONTENT_LENGTH=" + std::to_string(1000));
 	envp_vec.push_back("HTTP_USER_AGENT=" + _request->getRequest().at("User-Agent"));
 	envp_vec.push_back("QUERY_STRING=" + _request->getBody());
-//	envp_vec.push_back("REMOTE_ADDR=" + _request.get());
 	envp_vec.push_back("REMOTE_HOST=" + _request->getHost());
 	envp_vec.push_back("REQUEST_METHOD=" + _request->getMethod());
-	envp_vec.push_back("SCRIPT_FILENAME=cgi-bin");
-	envp_vec.push_back("SCRIPT_NAME=" + path);
 	envp_vec.push_back("SERVER_NAME=" + _config.server_name);
 	envp_vec.push_back("FILENAME=" + filename);
 	envp_vec.push_back("COOKIE=" + _request->getCookie());
-//	env = new char *[envp_vec.size()];
 	env = (char **)::malloc(sizeof(char *) * (envp_vec.size() + 1));
 	for (u_int i = 0; i < envp_vec.size(); i++)
 		env[i] = strdup(envp_vec[i].c_str());
 	env[envp_vec.size()] = nullptr;
-//	for (const auto &elem : envp_vec)
-//		std::cout << elem << std::endl;
-//	exit(0);
 	return env;
 }
 
