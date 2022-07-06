@@ -21,7 +21,6 @@ struct Server {
 
 		Client(int socketFd, std::string const &ip, int acceptFd, sockaddr_in clAddr)
 			: socketFd(socketFd), ip(ip), acceptFd(acceptFd), address(clAddr) {};
-
 		int			getSocketFd()	const { return socketFd; };
 		int			getAcceptFd()	const { return acceptFd; };
 		sockaddr_in	getAddress ()	const { return address; };

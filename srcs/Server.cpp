@@ -191,7 +191,7 @@ bool	Server::sender(Client *cl, size_t availBytes)
 
 	if (total_sent >= response.getRespLength())
 	{
-//		std::cout << response.getResponse() << std::endl;
+//		std::cout << response.getRespLength() << std::endl;
 //		std::cout	<< "SEND:	[" << cl->getAcceptFd()	<< "]; "
 //					<< "TOTAL:	[" << total_sent		<< "]; "
 //					<< "REQ:	[" << response.getRespLength()	<< "]"

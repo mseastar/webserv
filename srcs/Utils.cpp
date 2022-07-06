@@ -38,6 +38,20 @@ namespace utils {
 		}
 	}
 
+    std::string getCurrentTime()
+    {
+        time_t      	t = time(nullptr);
+        struct tm   	*tm;
+        char        	timestamp[23];
+
+        timestamp[22] = '\0';
+        tm = ::gmtime(&t);
+        tm->tm_hour += 3;
+        ::strftime(timestamp, sizeof(timestamp), "[%Y-%m-%d %H:%M:%S] ", tm);
+
+        return timestamp;
+    }
+
 	std::string	ltrim(std::string src, std::string const &chars)
 	{
 		src.erase(0, src.find_first_not_of(chars));
@@ -90,6 +104,18 @@ namespace utils {
 
 		return splitted;
 	}
+
+    std::string replace(std::string src, std::string const &erase, std::string const &paste)
+    {
+        size_t  pos = src.find(erase);
+
+        while (pos != std::string::npos)
+        {
+            src.replace(pos, erase.size(), paste);
+            pos = src.find(erase);
+        }
+        return src;
+    }
 
 	std::vector<std::string>	split_chunk(std::string src)
 	{

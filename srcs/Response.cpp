@@ -150,7 +150,7 @@ void    Response::getCgiResponse(std::string const &path, std::string const &fil
         free(tmp_env);
     }
     if (WEXITSTATUS(status) != 0)
-        _statusCode = WEXITSTATUS(status) ? 500 : 200;
+        _statusCode = 500;
 }
 
 
@@ -162,7 +162,7 @@ char	**Response::getCgiEnv(std::string const &path, std::string const &filename)
 
 	envp_vec.push_back("CONTENT_TYPE=" + _request->getAccept());
 	envp_vec.push_back("HTTP_USER_AGENT=" + _request->getRequest().at("User-Agent"));
-	envp_vec.push_back("QUERY_STRING=" + _request->getBody());
+    envp_vec.push_back("QUERY_STRING=" + _request->getBody());
 	envp_vec.push_back("REMOTE_HOST=" + _request->getHost());
 	envp_vec.push_back("REQUEST_METHOD=" + _request->getMethod());
 	envp_vec.push_back("SERVER_NAME=" + _config.server_name);

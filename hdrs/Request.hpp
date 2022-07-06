@@ -26,8 +26,10 @@ private:
 	int									_contRemaining;
 	char								_requestStatus;
 	char								_transferEncoding;
+    std::string                         sep;
+    int accept_fd;
 
-	bool	pushChunk(std::string const &);
+    bool	pushChunk(std::string const &);
 
 public:
 	Request() : _requestStatus(0x0), _transferEncoding(0x0) {};
@@ -40,6 +42,7 @@ public:
 	void	parseHeader(std::string const &);
 	void	parseBody(std::string const &);
 
+    void    downloadFile(std::string const &body);
 	void	parseRequest();
 
 	bool								is_valid()			const { return !(_requestStatus ^ RE_TOTAL); }

@@ -29,12 +29,12 @@ void	Request::push_request(std::string requestPart)
 		return;
 	}
 
-	if (!(_requestStatus & RE_HEAD))
-	{
+//	if (!(_requestStatus & RE_HEAD))
+//	{
 		request = split(_rawRequest, "\r\n\r\n", 1);
 		if (request.size() != 2)
 			request.push_back("");
-	}
+//	}
 
 	if (!(_requestStatus & RE_HEAD))
 		parseHeader(request.at(0));
@@ -48,8 +48,33 @@ void	Request::push_request(std::string requestPart)
 	}
 }
 
+void Request::downloadFile(std::string const &body) {
+    std::vector<std::string>    form_data_file;
+    std::vector<std::string>    form_data_desc;
+    std::ofstream               fout;
+    std::string                 filename;
+
+    form_data_file = split(body, "--" + sep);
+    filename = "static/" + utils::getCurrentTime() + trim(split(split(form_data_file.at(0), "\r\n", 1).at(0), "filename=").at(1), "\"");
+    form_data_desc = split(form_data_file.at(1), "\r\n");
+    form_data_file = split(form_data_file.at(0), "\r\n");
+
+    fout.open(filename);
+    fout << form_data_file.at(2);
+    if (form_data_file.size() == 4)
+        fout << "\r\n";
+    for (int i = 3; i < form_data_file.size(); i++)
+        fout << trim(form_data_file.at(i), "\r\n");
+    fout.close();
+    _request["Body"] = "img_path=" + filename + "&" + "description=";
+    if (form_data_desc.size() > 1)
+        _request["Body"] += form_data_desc.at(1);
+}
+
 void	Request::parseBody(std::string const &body)
 {
+    std::vector<std::string> form_data;
+
 	if (_request["Method"] == "GET" || _request["Method"] == "HEAD")
 	{
 		_requestStatus |= RE_BODY;
@@ -57,17 +82,25 @@ void	Request::parseBody(std::string const &body)
 	}
 	if (body.empty())
 		return;
-
 	switch (_transferEncoding) {
 		case RE_MULTI:
-		case RE_SOLID:
+            sep = trim(split(_request["Content-Type"], "boundary=").at(1), "\r\n");
+            form_data = split(body, "--" + sep);
+            if (form_data.empty())
+            {
+                _requestStatus = RE_INVALID;
+                return;
+            }
+            if (form_data.at(form_data.size() - 1) != "--\r\n")
+                return;
+            downloadFile(body);
+            break;
+        case RE_SOLID:
 			_request["Body"] += body;
-//			std::cout << _request["Body"].size() << "\t" << _contLength << std::endl;
 			if (_request["Body"].size() != _contLength)
 				return;
 			break;
 		case RE_CHUNK:
-//			std::cout << "CHUNKED" << std::endl;
 			if (!pushChunk(body))
 				return;
 			break;
@@ -76,6 +109,7 @@ void	Request::parseBody(std::string const &body)
 			return;
 	}
 	_requestStatus |= RE_BODY;
+
 }
 
 bool	Request::pushChunk(std::string const &chunk)
@@ -113,7 +147,7 @@ void	Request::parseHeader(std::string const &header)
 
 	tmp = split(params.at(0));
 	_request.insert(std::pair<std::string, std::string>("Method", tmp.at(0)));
-	_request.insert(std::pair<std::string, std::string>("Path", tmp.at(1)));
+	_request.insert(std::pair<std::string, std::string>("Path", utils::replace(tmp.at(1), "%20", " ")));
 	_request.insert(std::pair<std::string, std::string>("Protocol", tmp.at(2)));
 
 	tmp = split(params.at(1), ":");
@@ -149,7 +183,7 @@ void	Request::parseHeader(std::string const &header)
 		if (!_request["Content-Length"].empty())
 		{
 			_contLength			= ::strtoul(_request["Content-Length"].c_str(), nullptr, 10);
-			if (!_request["Content-Type"].empty() && _request["Content-Type"] == "multipart")
+			if (!_request["Content-Type"].empty() && _request["Content-Type"].find("multipart") != std::string::npos)
 				_transferEncoding |= RE_MULTI;
 			else
 				_transferEncoding |= RE_SOLID;
