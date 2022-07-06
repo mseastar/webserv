@@ -3,6 +3,8 @@ import html
 from functions import *
 import urllib.parse
 
+get_auth()
+
 body = get_body('Новая запись')
 data = os.environ['QUERY_STRING'].split('&')
 dicti = dict()
@@ -32,3 +34,8 @@ else:
       <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>"""
     main_page = get_head_html('Пост опубликован') + body + "</body>\n</html>"
+print(get_response().format(status="200 OK",
+                            server=os.environ['SERVER_NAME'],
+                            cont_len=len(main_page.encode('utf-8')),
+                            cont_type=os.environ['CONTENT_TYPE']) +
+      "\r\n\r\n" + main_page, end='')

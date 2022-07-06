@@ -58,13 +58,13 @@ else:
                 </h2>
                 <div id="flush-collapseOne" class="accordion-collapse collapse" aria-labelledby="flush-headingOne" data-bs-parent="#accordionFlushExample">
                     <div class="accordion-body">
-                            <form method="post" action="/add_image" style="max-width:60%; margin:20px;" enctype="multipart/form-data">
+                            <form method="post" action="/add_image" enctype="multipart/form-data">
                                 <div class="mb-3">
                                   <label class="form-label" >Выберите изображение</label>
-                                  <input class="form-control" type="file" >
+                                  <input class="form-control" type="file" name="file" required multiple accept="image/*">
                                 </div>
                                 <div class="form-floating">
-                                    <textarea class="form-control" placeholder="Добавить описание" style="height: 100px"></textarea>
+                                    <textarea class="form-control" placeholder="Добавить описание" style="height: 100px" name="description" ></textarea>
                                     <label>Описание</label>
                                 </div>
                                 <button type="submit" class="btn btn-primary" style="margin-top:10px;">Выложить</button>

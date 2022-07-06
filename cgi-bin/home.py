@@ -12,7 +12,7 @@ def get_posts():
             i = i.split('=')
             dicti[i[0]] = i[1]
     page = int(dicti.get('page')) if dicti.get('page') else 0
-    posts_on_page = 3
+    posts_on_page = 1
     body = ""
     with sqlite3.connect("cgi-bin/web.db") as conn:
         cur = conn.cursor()

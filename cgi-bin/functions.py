@@ -88,6 +88,7 @@ def generate_random_string():
     rand_string = ''.join(random.choice(letters) for i in range(32))
     return rand_string
 
+
 def check_uniq(img_path):
     with sqlite3.connect("cgi-bin/web.db") as conn:
         cur = conn.cursor()
