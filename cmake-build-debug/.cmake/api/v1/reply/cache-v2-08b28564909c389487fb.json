@@ -55,7 +55,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "/Users/mseastar/CLionProjects/webserv/cmake-build-debug"
+			"value" : "/Users/gernesto/Desktop/webserv_main/cmake-build-debug"
 		},
 		{
 			"name" : "CMAKE_CACHE_MAJOR_VERSION",
@@ -515,7 +515,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "/Users/mseastar/CLionProjects/webserv"
+			"value" : "/Users/gernesto/Desktop/webserv_main"
 		},
 		{
 			"name" : "CMAKE_INSTALL_NAME_TOOL",
@@ -795,7 +795,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "zero_webserv"
+			"value" : "webserv_main"
 		},
 		{
 			"name" : "CMAKE_RANLIB",
@@ -1078,6 +1078,42 @@
 			"value" : "FALSE"
 		},
 		{
+			"name" : "webserv_main_BINARY_DIR",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "/Users/gernesto/Desktop/webserv_main/cmake-build-debug"
+		},
+		{
+			"name" : "webserv_main_IS_TOP_LEVEL",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "ON"
+		},
+		{
+			"name" : "webserv_main_SOURCE_DIR",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "/Users/gernesto/Desktop/webserv_main"
+		},
+		{
 			"name" : "zero_webserv_BINARY_DIR",
 			"properties" : 
 			[
@@ -1087,7 +1123,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/Users/mseastar/CLionProjects/webserv/cmake-build-debug"
+			"value" : "/Users/gernesto/Desktop/webserv_main/cmake-build-debug"
 		},
 		{
 			"name" : "zero_webserv_IS_TOP_LEVEL",
@@ -1111,7 +1147,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/Users/mseastar/CLionProjects/webserv"
+			"value" : "/Users/gernesto/Desktop/webserv_main"
 		}
 	],
 	"kind" : "cache",

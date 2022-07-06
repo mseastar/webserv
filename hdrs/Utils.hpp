@@ -57,6 +57,7 @@ namespace utils {
 	void						print_fullRequest(std::map<std::string, std::string> const &request);
 	void						print_shortRequest(Request const *request);
 	std::string					to_lower(std::string);
+	bool						endswith(std::string const &, std::string const &, bool = true);
 
 }
 

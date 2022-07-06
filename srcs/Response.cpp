@@ -3,9 +3,11 @@
 //
 
 #include "../hdrs/Response.hpp"
-const std::map<int, std::string>	Response::_statusPhrase = Response::_createMap();
+const std::map<int, std::string>	Response::_statusPhrase		= Response::_createStatusPhrasesMap();
+const std::string					Response::_imageMIMETypes	= ".bmp.cod.gif.ief.jpe.jpeg.jpg.svg.tif.tiff"
+																	".ras.cmx.ico.pnm.pbm.pgm.ppm.rgb.xbm.xpm.xwd.png";
 
-std::map<int, std::string> Response::_createMap()
+std::map<int, std::string> Response::_createStatusPhrasesMap()
 {
 	std::map<int, std::string>	m;
 
@@ -31,22 +33,6 @@ Response::Response(Params &config, Request *request)
 {
 }
 
-
-int Response::getImageBytes(std::string const &str, const std::string &format) {
-    std::ifstream fin(trim(_request->getPath(), "/"));
-
-    if (!fin.is_open())
-        return 0;
-    char c;
-    while (!fin.eof())
-    {
-        fin.read(&c, 1);
-        _body += c;
-    }
-    fin.close();
-    return 1;
-}
-
 int		Response::process()
 {
 	std::string	param;
@@ -59,10 +45,9 @@ int		Response::process()
 			_body = readFile(trim(_request->getPath(), "./"));
 			break;
         case image:
-            if (getImageBytes(_request->getPath(), ".png"))
+            if (getImageBytes())
                 break;
-            else
-                _statusCode = 404;
+			_statusCode = 404;
 		case autoindexation:
             if (_statusCode == 200)
                 getCgiResponse(_config.locations.at(param).at("cgi"), trim(_request->getPath(), "/"));
@@ -86,18 +71,18 @@ int		Response::process()
 	}
 	craftResponse();
 
-	logging(	_request->getMethod()				+ " " +
-					_request->getPath()					+ " " +
-					std::to_string(_statusCode)		+ " " +
-					_statusPhrase.at(_statusCode)	+ " " +
-					std::to_string(_body.size()));
+	logging(_request->getMethod()				+ " " +
+			_request->getPath()					+ " " +
+			std::to_string(_statusCode)		+ " " +
+			_statusPhrase.at(_statusCode)	+ " " +
+			std::to_string(_body.size()));
 
 	return _caseNum;
 }
 
 int			Response::action_to_do(std::string &param)
 {
-    if (_request->getPath().find(".png") != std::string::npos)
+    if (is_image())
         return _caseNum = image;
 	if (_request->getPath().find("bootstrap") != std::string::npos)
 		return _caseNum = bootstrap;
@@ -111,6 +96,24 @@ int			Response::action_to_do(std::string &param)
 		if (is_cgi())
 			return cgi;
 	return _caseNum = other;
+}
+
+bool	Response::getImageBytes() {
+	std::ifstream fin(trim(_request->getPath(), "/"));
+
+	if (!fin.is_open())
+		return false;
+
+	char	c;
+
+	while (!fin.eof())
+	{
+		fin.read(&c, 1);
+		_body += c;
+	}
+	fin.close();
+
+	return true;
 }
 
 void    Response::getCgiResponse(std::string const &path, std::string const &filename)
@@ -172,6 +175,15 @@ char	**Response::getCgiEnv(std::string const &path, std::string const &filename)
 	return env;
 }
 
+bool	Response::is_image()
+{
+	std::string	reqstr = _request->getPath();
+
+	if (reqstr.find_last_of('.') != std::string::npos && reqstr.substr(reqstr.find_last_of('.')).size() >= 4)
+		return _imageMIMETypes.find(reqstr.substr(reqstr.find_last_of('.'))) != std::string::npos;
+
+	return false;
+}
 
 bool	Response::is_cgi()
 {
@@ -273,6 +285,7 @@ void	Response::craftHeader()
 			  std::to_string(_statusCode) + " " +
 			  _statusPhrase.at(_statusCode) + "\r\n" +
 			  "Server: " + _config.server_name + "\r\n" +
+//			  "Connection: close\r\n" +
 			  "Connection: keep-alive\r\n" +
 			  "Content-Length: " + std::to_string(_body.size()) + "\r\n";
 	if (_statusCode == 301 || _statusCode == 307)
@@ -287,3 +300,35 @@ void	Response::craftHeader()
 	else
 		_header += "Content-Type: " + _request->getAccept() + "\r\n\r\n";
 }
+
+/*
+std::map<std::string, std::string>	Response::_createImageMIMETypesMap()
+{
+	std::map<std::string, std::string>	m;
+
+	m[".bmp"]	= "image/bmp";
+	m[".cod"]	= "image/cis-cod";
+	m[".gif"]	= "image/gif";
+	m[".ief"]	= "image/ief";
+	m[".jpe"]	= "image/jpeg";
+	m[".jpeg"]	= "image/jpeg";
+	m[".jpg"]	= "image/jpeg";
+	m[".jfif"]	= "image/pipeg";
+	m[".svg"]	= "image/svg+xml";
+	m[".tif"]	= "image/tiff";
+	m[".tiff"]	= "image/tiff";
+	m[".ras"]	= "image/x-cmu-raster";
+	m[".cmx"]	= "image/x-cmx";
+	m[".ico"]	= "image/x-icon";
+	m[".pnm"]	= "image/x-portable-anymap";
+	m[".pbm"]	= "image/x-portable-bitmap";
+	m[".pgm"]	= "image/x-portable-graymap";
+	m[".ppm"]	= "image/x-portable-pixmap";
+	m[".rgb"]	= "image/x-rgb";
+	m[".xbm"]	= "image/x-xbitmap";
+	m[".xpm"]	= "image/x-xpixmap";
+	m[".xwd"]	= "image/x-xwindowdump";
+
+	return m;
+}
+ */

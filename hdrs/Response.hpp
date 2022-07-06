@@ -8,9 +8,10 @@
 # include "Config.hpp"
 
 class Response {
-	static std::map<int, std::string>		_createMap();
-	static const std::map<int, std::string> _statusPhrase;
-//	static const std::string				_favicon;
+	static std::map<int, std::string>			_createStatusPhrasesMap();
+	static const std::map<int, std::string> 	_statusPhrase;
+	static const std::string					_imageMIMETypes;
+//	static const std::string					_favicon;
 
 public:
 	enum	Action {
@@ -37,6 +38,7 @@ private:
 
 	int			action_to_do(std::string &);
 	std::string	is_autoindex();
+	bool		is_image();
 	bool		is_redirect();
 	bool		is_cgi();
 	bool		is_valid();
@@ -44,7 +46,7 @@ private:
 	void		craftResponse();
 	void        getCgiResponse(const std::string &scriptName, std::string const &filename = "");
 	char		**getCgiEnv(std::string const &scriptName, std::string const &filename = "") const;
-    int        getImageBytes(std::string const &str, const std::string &format);
+    bool		getImageBytes();
 
 public:
 	Response(Params &, Request *);

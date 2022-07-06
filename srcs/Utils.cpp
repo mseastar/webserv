@@ -155,7 +155,15 @@ namespace utils {
 			src[i] = (char)tolower(src[i]);
 		return src;
 	}
+
+	bool	endswith(std::string const &haystack, std::string const &needle, bool tight)
+	{
+		return	(tight ? haystack.size() >= needle.size() : haystack.size() > needle.size()) &&
+				0 == haystack.compare(haystack.size() - needle.size(), needle.size(), needle);
+	}
+
 }
+
 /*
 std::vector<std::string>	split(std::string src, std::string const &delimiter, int maxsplit)
 {

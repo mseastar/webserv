@@ -2,7 +2,7 @@
 	"artifacts" : 
 	[
 		{
-			"path" : "zero_webserv"
+			"path" : "webserv_main"
 		}
 	],
 	"backtrace" : 1,
@@ -62,7 +62,7 @@
 			]
 		}
 	],
-	"id" : "zero_webserv::@6890427a1f51a3e7e1df",
+	"id" : "webserv_main::@6890427a1f51a3e7e1df",
 	"link" : 
 	{
 		"commandFragments" : 
@@ -78,8 +78,8 @@
 		],
 		"language" : "CXX"
 	},
-	"name" : "zero_webserv",
-	"nameOnDisk" : "zero_webserv",
+	"name" : "webserv_main",
+	"nameOnDisk" : "webserv_main",
 	"paths" : 
 	{
 		"build" : ".",

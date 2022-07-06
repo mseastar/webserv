@@ -11,7 +11,7 @@
 # =============================================================================
 
 # =============================================================================
-# Project: zero_webserv
+# Project: webserv_main
 # Configurations: Debug
 # =============================================================================
 
@@ -39,13 +39,13 @@ include CMakeFiles/rules.ninja
 #############################################
 # Logical path to working directory; prefix for absolute paths.
 
-cmake_ninja_workdir = /Users/mseastar/CLionProjects/webserv/cmake-build-debug/
+cmake_ninja_workdir = /Users/gernesto/Desktop/webserv_main/cmake-build-debug/
 
 #############################################
 # Utility command for rebuild_cache
 
 build CMakeFiles/rebuild_cache.util: CUSTOM_COMMAND
-  COMMAND = cd /Users/mseastar/CLionProjects/webserv/cmake-build-debug && /Applications/CLion.app/Contents/bin/cmake/mac/bin/cmake --regenerate-during-build -S/Users/mseastar/CLionProjects/webserv -B/Users/mseastar/CLionProjects/webserv/cmake-build-debug
+  COMMAND = cd /Users/gernesto/Desktop/webserv_main/cmake-build-debug && /Applications/CLion.app/Contents/bin/cmake/mac/bin/cmake --regenerate-during-build -S/Users/gernesto/Desktop/webserv_main -B/Users/gernesto/Desktop/webserv_main/cmake-build-debug
   DESC = Running CMake to regenerate build system...
   pool = console
   restat = 1
@@ -57,78 +57,78 @@ build rebuild_cache: phony CMakeFiles/rebuild_cache.util
 # Utility command for edit_cache
 
 build CMakeFiles/edit_cache.util: CUSTOM_COMMAND
-  COMMAND = cd /Users/mseastar/CLionProjects/webserv/cmake-build-debug && /Applications/CLion.app/Contents/bin/cmake/mac/bin/cmake -E echo No\ interactive\ CMake\ dialog\ available.
+  COMMAND = cd /Users/gernesto/Desktop/webserv_main/cmake-build-debug && /Applications/CLion.app/Contents/bin/cmake/mac/bin/cmake -E echo No\ interactive\ CMake\ dialog\ available.
   DESC = No interactive CMake dialog available...
   restat = 1
 
 build edit_cache: phony CMakeFiles/edit_cache.util
 
 # =============================================================================
-# Object build statements for EXECUTABLE target zero_webserv
+# Object build statements for EXECUTABLE target webserv_main
 
 
 #############################################
-# Order-only phony target for zero_webserv
+# Order-only phony target for webserv_main
 
-build cmake_object_order_depends_target_zero_webserv: phony || CMakeFiles/zero_webserv.dir
+build cmake_object_order_depends_target_webserv_main: phony || CMakeFiles/webserv_main.dir
 
-build CMakeFiles/zero_webserv.dir/srcs/main.cpp.o: CXX_COMPILER__zero_webserv_Debug /Users/mseastar/CLionProjects/webserv/srcs/main.cpp || cmake_object_order_depends_target_zero_webserv
-  DEP_FILE = CMakeFiles/zero_webserv.dir/srcs/main.cpp.o.d
+build CMakeFiles/webserv_main.dir/srcs/main.cpp.o: CXX_COMPILER__webserv_main_Debug /Users/gernesto/Desktop/webserv_main/srcs/main.cpp || cmake_object_order_depends_target_webserv_main
+  DEP_FILE = CMakeFiles/webserv_main.dir/srcs/main.cpp.o.d
   FLAGS = -g -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -mmacosx-version-min=11.6 -std=gnu++11
-  OBJECT_DIR = CMakeFiles/zero_webserv.dir
-  OBJECT_FILE_DIR = CMakeFiles/zero_webserv.dir/srcs
+  OBJECT_DIR = CMakeFiles/webserv_main.dir
+  OBJECT_FILE_DIR = CMakeFiles/webserv_main.dir/srcs
 
-build CMakeFiles/zero_webserv.dir/srcs/Utils.cpp.o: CXX_COMPILER__zero_webserv_Debug /Users/mseastar/CLionProjects/webserv/srcs/Utils.cpp || cmake_object_order_depends_target_zero_webserv
-  DEP_FILE = CMakeFiles/zero_webserv.dir/srcs/Utils.cpp.o.d
+build CMakeFiles/webserv_main.dir/srcs/Utils.cpp.o: CXX_COMPILER__webserv_main_Debug /Users/gernesto/Desktop/webserv_main/srcs/Utils.cpp || cmake_object_order_depends_target_webserv_main
+  DEP_FILE = CMakeFiles/webserv_main.dir/srcs/Utils.cpp.o.d
   FLAGS = -g -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -mmacosx-version-min=11.6 -std=gnu++11
-  OBJECT_DIR = CMakeFiles/zero_webserv.dir
-  OBJECT_FILE_DIR = CMakeFiles/zero_webserv.dir/srcs
+  OBJECT_DIR = CMakeFiles/webserv_main.dir
+  OBJECT_FILE_DIR = CMakeFiles/webserv_main.dir/srcs
 
-build CMakeFiles/zero_webserv.dir/srcs/SimpSocket.cpp.o: CXX_COMPILER__zero_webserv_Debug /Users/mseastar/CLionProjects/webserv/srcs/SimpSocket.cpp || cmake_object_order_depends_target_zero_webserv
-  DEP_FILE = CMakeFiles/zero_webserv.dir/srcs/SimpSocket.cpp.o.d
+build CMakeFiles/webserv_main.dir/srcs/SimpSocket.cpp.o: CXX_COMPILER__webserv_main_Debug /Users/gernesto/Desktop/webserv_main/srcs/SimpSocket.cpp || cmake_object_order_depends_target_webserv_main
+  DEP_FILE = CMakeFiles/webserv_main.dir/srcs/SimpSocket.cpp.o.d
   FLAGS = -g -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -mmacosx-version-min=11.6 -std=gnu++11
-  OBJECT_DIR = CMakeFiles/zero_webserv.dir
-  OBJECT_FILE_DIR = CMakeFiles/zero_webserv.dir/srcs
+  OBJECT_DIR = CMakeFiles/webserv_main.dir
+  OBJECT_FILE_DIR = CMakeFiles/webserv_main.dir/srcs
 
-build CMakeFiles/zero_webserv.dir/srcs/Server.cpp.o: CXX_COMPILER__zero_webserv_Debug /Users/mseastar/CLionProjects/webserv/srcs/Server.cpp || cmake_object_order_depends_target_zero_webserv
-  DEP_FILE = CMakeFiles/zero_webserv.dir/srcs/Server.cpp.o.d
+build CMakeFiles/webserv_main.dir/srcs/Server.cpp.o: CXX_COMPILER__webserv_main_Debug /Users/gernesto/Desktop/webserv_main/srcs/Server.cpp || cmake_object_order_depends_target_webserv_main
+  DEP_FILE = CMakeFiles/webserv_main.dir/srcs/Server.cpp.o.d
   FLAGS = -g -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -mmacosx-version-min=11.6 -std=gnu++11
-  OBJECT_DIR = CMakeFiles/zero_webserv.dir
-  OBJECT_FILE_DIR = CMakeFiles/zero_webserv.dir/srcs
+  OBJECT_DIR = CMakeFiles/webserv_main.dir
+  OBJECT_FILE_DIR = CMakeFiles/webserv_main.dir/srcs
 
-build CMakeFiles/zero_webserv.dir/srcs/Request.cpp.o: CXX_COMPILER__zero_webserv_Debug /Users/mseastar/CLionProjects/webserv/srcs/Request.cpp || cmake_object_order_depends_target_zero_webserv
-  DEP_FILE = CMakeFiles/zero_webserv.dir/srcs/Request.cpp.o.d
+build CMakeFiles/webserv_main.dir/srcs/Request.cpp.o: CXX_COMPILER__webserv_main_Debug /Users/gernesto/Desktop/webserv_main/srcs/Request.cpp || cmake_object_order_depends_target_webserv_main
+  DEP_FILE = CMakeFiles/webserv_main.dir/srcs/Request.cpp.o.d
   FLAGS = -g -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -mmacosx-version-min=11.6 -std=gnu++11
-  OBJECT_DIR = CMakeFiles/zero_webserv.dir
-  OBJECT_FILE_DIR = CMakeFiles/zero_webserv.dir/srcs
+  OBJECT_DIR = CMakeFiles/webserv_main.dir
+  OBJECT_FILE_DIR = CMakeFiles/webserv_main.dir/srcs
 
-build CMakeFiles/zero_webserv.dir/srcs/Config.cpp.o: CXX_COMPILER__zero_webserv_Debug /Users/mseastar/CLionProjects/webserv/srcs/Config.cpp || cmake_object_order_depends_target_zero_webserv
-  DEP_FILE = CMakeFiles/zero_webserv.dir/srcs/Config.cpp.o.d
+build CMakeFiles/webserv_main.dir/srcs/Config.cpp.o: CXX_COMPILER__webserv_main_Debug /Users/gernesto/Desktop/webserv_main/srcs/Config.cpp || cmake_object_order_depends_target_webserv_main
+  DEP_FILE = CMakeFiles/webserv_main.dir/srcs/Config.cpp.o.d
   FLAGS = -g -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -mmacosx-version-min=11.6 -std=gnu++11
-  OBJECT_DIR = CMakeFiles/zero_webserv.dir
-  OBJECT_FILE_DIR = CMakeFiles/zero_webserv.dir/srcs
+  OBJECT_DIR = CMakeFiles/webserv_main.dir
+  OBJECT_FILE_DIR = CMakeFiles/webserv_main.dir/srcs
 
-build CMakeFiles/zero_webserv.dir/srcs/Response.cpp.o: CXX_COMPILER__zero_webserv_Debug /Users/mseastar/CLionProjects/webserv/srcs/Response.cpp || cmake_object_order_depends_target_zero_webserv
-  DEP_FILE = CMakeFiles/zero_webserv.dir/srcs/Response.cpp.o.d
+build CMakeFiles/webserv_main.dir/srcs/Response.cpp.o: CXX_COMPILER__webserv_main_Debug /Users/gernesto/Desktop/webserv_main/srcs/Response.cpp || cmake_object_order_depends_target_webserv_main
+  DEP_FILE = CMakeFiles/webserv_main.dir/srcs/Response.cpp.o.d
   FLAGS = -g -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -mmacosx-version-min=11.6 -std=gnu++11
-  OBJECT_DIR = CMakeFiles/zero_webserv.dir
-  OBJECT_FILE_DIR = CMakeFiles/zero_webserv.dir/srcs
+  OBJECT_DIR = CMakeFiles/webserv_main.dir
+  OBJECT_FILE_DIR = CMakeFiles/webserv_main.dir/srcs
 
 
 # =============================================================================
-# Link build statements for EXECUTABLE target zero_webserv
+# Link build statements for EXECUTABLE target webserv_main
 
 
 #############################################
-# Link the executable zero_webserv
+# Link the executable webserv_main
 
-build zero_webserv: CXX_EXECUTABLE_LINKER__zero_webserv_Debug CMakeFiles/zero_webserv.dir/srcs/main.cpp.o CMakeFiles/zero_webserv.dir/srcs/Utils.cpp.o CMakeFiles/zero_webserv.dir/srcs/SimpSocket.cpp.o CMakeFiles/zero_webserv.dir/srcs/Server.cpp.o CMakeFiles/zero_webserv.dir/srcs/Request.cpp.o CMakeFiles/zero_webserv.dir/srcs/Config.cpp.o CMakeFiles/zero_webserv.dir/srcs/Response.cpp.o
+build webserv_main: CXX_EXECUTABLE_LINKER__webserv_main_Debug CMakeFiles/webserv_main.dir/srcs/main.cpp.o CMakeFiles/webserv_main.dir/srcs/Utils.cpp.o CMakeFiles/webserv_main.dir/srcs/SimpSocket.cpp.o CMakeFiles/webserv_main.dir/srcs/Server.cpp.o CMakeFiles/webserv_main.dir/srcs/Request.cpp.o CMakeFiles/webserv_main.dir/srcs/Config.cpp.o CMakeFiles/webserv_main.dir/srcs/Response.cpp.o
   FLAGS = -g -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -mmacosx-version-min=11.6
-  OBJECT_DIR = CMakeFiles/zero_webserv.dir
+  OBJECT_DIR = CMakeFiles/webserv_main.dir
   POST_BUILD = :
   PRE_LINK = :
-  TARGET_FILE = zero_webserv
-  TARGET_PDB = zero_webserv.dbg
+  TARGET_FILE = webserv_main
+  TARGET_PDB = webserv_main.dbg
 
 # =============================================================================
 # Target aliases.
@@ -139,9 +139,9 @@ build zero_webserv: CXX_EXECUTABLE_LINKER__zero_webserv_Debug CMakeFiles/zero_we
 # =============================================================================
 
 #############################################
-# Folder: /Users/mseastar/CLionProjects/webserv/cmake-build-debug
+# Folder: /Users/gernesto/Desktop/webserv_main/cmake-build-debug
 
-build all: phony zero_webserv
+build all: phony webserv_main
 
 # =============================================================================
 # Built-in targets

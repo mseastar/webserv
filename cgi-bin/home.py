@@ -31,8 +31,7 @@ def get_posts():
         <div class="card mb-3" style="max-width: 60%;">
             <div class="row g-0">
                 <div class="col-md-4" style="max-width:30%;max-height:30%;">
-                    <a href="{html.escape(i[0])}"><img src="{html.escape(i[0])}" 
-                    style="max-width:100%; max-height: 100%;"></a>
+                    <a href="{html.escape(i[0])}"><img src="{html.escape(i[0])}" style="max-width:100%; max-height: 100%;"></a>
                 </div>
                 <div class="col-md-8">
                     <div class="card-body">
