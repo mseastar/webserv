@@ -7,6 +7,10 @@
 # include "Request.hpp"
 # include "Config.hpp"
 
+# define RES_INVALID	0x0
+# define RES_PUT		0x1
+# define RES_DELETE 	0x2
+
 class Response {
 	static std::map<int, std::string>			_createStatusPhrasesMap();
 	static const std::map<int, std::string> 	_statusPhrase;
@@ -20,8 +24,10 @@ public:
 		bootstrap,
 		autoindexation,
 		redirection,
-		cgi,
-		other
+		cgi_loc,
+		cgi_com,
+		file_modif,
+		page
 	};
 
 private:
@@ -34,16 +40,20 @@ private:
 	std::string		_response;
 	int				_caseNum;
 
-	std::string		_username;
+//	std::string		_username;
 
 	int			action_to_do(std::string &);
-	std::string	is_autoindex();
+	bool		is_body_slim();
 	bool		is_image();
-	bool		is_redirect();
-	bool		is_cgi();
-	bool		is_valid();
+	bool		is_redirect(std::string const &);
+	bool		is_autoindex(std::string const &);
+	bool		is_method_alowed(std::string const &);
+	bool		is_cgi(std::string const &);
+	std::string	is_file_modification(std::string const &);
+	std::string	is_page(std::string const &);
 	void		craftHeader();
 	void		craftResponse();
+	bool		handleModification(std::string const &);
 	void        getCgiResponse(const std::string &scriptName, std::string const &filename = "");
 	char		**getCgiEnv(std::string const &scriptName, std::string const &filename = "") const;
     bool		getImageBytes();
@@ -54,6 +64,8 @@ public:
 //	Response &operator = (Response const &other);
 //	virtual ~Response();
 
+	int			getStatusCode()		const { return _statusCode; };
+	std::string	getStatusPhrase()	const { return _statusPhrase.at(_statusCode); };
 	std::string	getResponse()		const { return _response; };
 	size_t		getRespLength()		const { return _response.size(); };
 	size_t		getHeaderLength()	const { return _header.size(); };

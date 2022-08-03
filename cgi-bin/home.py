@@ -156,7 +156,7 @@ else:
         cur = conn.cursor()
         cur.execute(f"SELECT * FROM posts WHERE posts.id = {id_post}")
         res = cur.fetchone()
-        if not all([text, id_post]) or len(data) != 2 or res is None:
+        if not all([text, id_post]) or res is None:
             body += """<div class="alert alert-danger alert-dismissible fade show" role="alert">
       <strong>Некорректные данные формы </strong>
       <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>

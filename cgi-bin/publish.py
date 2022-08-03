@@ -64,7 +64,7 @@ else:
                                   <input class="form-control" type="file" name="file" required multiple accept="image/*">
                                 </div>
                                 <div class="form-floating">
-                                    <textarea class="form-control" placeholder="Добавить описание" style="height: 100px" name="description" ></textarea>
+                                    <textarea class="form-control" placeholder="Добавить описание" style="height: 100px" name="description" required></textarea>
                                     <label>Описание</label>
                                 </div>
                                 <button type="submit" class="btn btn-primary" style="margin-top:10px;">Выложить</button>

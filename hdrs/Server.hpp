@@ -41,18 +41,17 @@ private:
 //	Kevent			_chList, _evList; // events we want to monitor, events that were triggered
 	struct kevent	_evList[1024]; // events that were triggered
 
-	struct timespec	_timeout = { TIMEOUT, 0 };
+	struct timespec	_timeout;
 	int				_kq;
 
-	void		updateEvent(int socketFD, short filter, ushort flags, uint fflags, int data, void *udata, bool = false);
+	void		updateEvent(int socketFD, short filter, ushort flags, uint fflags, int data, void *udata);
 	void		acceptConnection(int);
 	void		dropConnection(Client *, bool = true);
 	int			kevent();
 	void		accept(int);
 //	void		handle();
 	bool		receiver(Client *cl, long dataLen);
-	bool		sender(Client *cl, size_t availBytes);
-	bool		sender_test(Client *cl, size_t availBytes);
+	bool		sender(Client *cl, long availBytes);
 
 public:
 	Server(char **av);

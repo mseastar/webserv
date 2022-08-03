@@ -6,13 +6,16 @@ Server::Server(char **av)
 	Config				config(av);
 	std::vector<Params>	confParams;
 
+	_timeout.tv_sec = TIMEOUT;
+	_timeout.tv_nsec = 0;
+
 	utils::createLogFile();
 	if (!config.is_valid())
 		throw ConfigException();
 
 	if ((_kq = kqueue()) == -1)
 	{
-		utils::logging("kqueue(): " + std::string(strerror(errno)));
+		utils::logging("srcs/Server.cpp:18: error: kqueue()");
 		throw KqueueException();
 	}
 	confParams	= config.getParams();
@@ -83,13 +86,13 @@ int		Server::kevent()
 		std::cout << YELLOW << "\33[2K\rWaiting for connection" << dots[++n] << RESET << std::flush;
 		if (n == 3)
 			n = -1;
-	eventsNum = ::kevent(_kq, nullptr, 0, _evList, 1024, &_timeout);
+		eventsNum = ::kevent(_kq, nullptr, 0, _evList, 1024, &_timeout);
 	}
 	std::cout << "\33[2K\r"; // cleans the terminal line
 
 	if (eventsNum == -1)
 	{
-		utils::logging(strerror(errno), utils::error);
+		utils::logging("srcs/Server.cpp:89: error: kevent()", utils::error);
 		throw KeventException();
 	}
 
@@ -140,8 +143,7 @@ void	Server::accept(int numberOfEvents)
 					updateEvent((int)_evList[i].ident, EVFILT_READ, EV_DISABLE, 0, 0, nullptr);
 					updateEvent((int)_evList[i].ident, EVFILT_WRITE, EV_ENABLE, 0, 0, nullptr);
 				}
-				else if (_evList[i].filter == EVFILT_WRITE && !sender(client, _configs[client->getSocketFd()].body_size_limit))
-//				else if (_evList[i].filter == EVFILT_WRITE && !sender_test(client, _configs[client->getSocketFd()].body_size_limit))
+				else if (_evList[i].filter == EVFILT_WRITE && !sender(client, _evList[i].data))
 				{
 					updateEvent((int) _evList[i].ident, EVFILT_READ, EV_ENABLE, 0, 0, nullptr);
 					updateEvent((int) _evList[i].ident, EVFILT_WRITE, EV_DISABLE, 0, 0, nullptr);
@@ -151,18 +153,18 @@ void	Server::accept(int numberOfEvents)
 	}
 }
 
-bool	Server::sender(Client *cl, size_t availBytes)
+bool	Server::sender(Client *cl, long availBytes)
 {
 	size_t			actual_sent;
 	size_t			attempt_to_send;
 	size_t			remaining;
-	static size_t	total_sent;
+	static u_long	total_sent;
 
 	std::string	host	= _requests[cl->getAcceptFd()]->getHost();
 	std::string	port	= _requests[cl->getAcceptFd()]->getPort();
 	size_t		i		= 0;
 	for (; i < _configs.size(); ++i)
-		if (_configs[int(i)].host == host && std::to_string(_configs[int(i)].port) == port)
+		if (std::to_string(_configs[int(i)].port) == port)
 			break ;
 	Response	response(_configs[int(i)], _requests[cl->getAcceptFd()]);
 //	int	caseId = response.process();
@@ -172,22 +174,17 @@ bool	Server::sender(Client *cl, size_t availBytes)
 //	if (caseId == Response::Action::bootstrap)
 //		attempt_to_send = response.getRespLength();
 //	else if (availBytes >= remaining)
-	if (availBytes >= remaining)
+	if (availBytes >= (long)remaining)
 		attempt_to_send = remaining;
 	else
 		attempt_to_send = availBytes;
 
-	actual_sent	= send(cl->getAcceptFd(), total_sent + response.getResponse().c_str(), attempt_to_send, 0);
-//	std::cout << actual_sent << std::endl;
-	total_sent += actual_sent;
-
-	if (total_sent - response.getHeaderLength() >= availBytes)
+	if ((actual_sent = send(cl->getAcceptFd(), total_sent + response.getResponse().c_str(), attempt_to_send, 0)) <= 0)
 	{
-		total_sent = 0;
-		delete _requests[cl->getAcceptFd()];
-		_requests.erase(_requests.find(cl->getAcceptFd()));
 		dropConnection(cl);
+		return true;
 	}
+	total_sent += actual_sent;
 
 	if (total_sent >= response.getRespLength())
 	{
@@ -196,29 +193,36 @@ bool	Server::sender(Client *cl, size_t availBytes)
 //					<< "TOTAL:	[" << total_sent		<< "]; "
 //					<< "REQ:	[" << response.getRespLength()	<< "]"
 //					<< std::endl;
+		logging(_requests[cl->getAcceptFd()]->getMethod()		+ " " +
+				_requests[cl->getAcceptFd()]->getPath()			+ " " +
+				std::to_string(response.getStatusCode())	+ " " +
+				response.getStatusPhrase()						+ " " +
+				std::to_string(response.getBodyLength()));
+
 		total_sent = 0;
 		delete _requests[cl->getAcceptFd()];
 		_requests.erase(_requests.find(cl->getAcceptFd()));
+
 		return false;
 	}
+
 	return true;
 }
 
 bool	Server::receiver(Client *cl, long dataLen)
 {
-//	std::cout << dataLen << std::endl;
 	if (cl == nullptr)
 		return false;
 	if (!dataLen)
 		dataLen = 1500; // MTU by default
 
 	char				buffer[dataLen];
-	size_t				bytes;
+	ssize_t				bytes;
 
 	bzero(buffer, dataLen);
 	if ((bytes = ::recv(cl->getAcceptFd(), buffer, dataLen, 0)) == -1)
 	{
-		utils::logging("Server: recv failed", utils::error);
+		utils::logging("srcs/Server.cpp:225: error: recv()", utils::error);
 		dropConnection(cl);
 		return false;
 	}
@@ -230,7 +234,7 @@ bool	Server::receiver(Client *cl, long dataLen)
 	}
 
 	if (_requests.find(cl->getAcceptFd()) == _requests.end())
-		_requests[cl->getAcceptFd()] = new Request();
+		_requests[cl->getAcceptFd()] = new Request(&_configs);
 
 	_requests[cl->getAcceptFd()]->push_request(std::string(buffer, bytes));
 
@@ -252,7 +256,8 @@ void	Server::acceptConnection(int socketFd)
 
 	if ((clientFd = ::accept(socketFd, (struct sockaddr *)&clientAddress, &clientAddressLen)) == -1)
 	{
-		utils::logging("Error: accept()", utils::error); // http code 500
+		utils::logging("srcs/Server.cpp:257: error: accept()", utils::error); // http code 500
+		exit(1);
 		return;
 	}
 	fcntl(clientFd, F_SETFL, O_NONBLOCK);
@@ -266,15 +271,12 @@ void	Server::acceptConnection(int socketFd)
 	utils::logging("New connection on " + _clients[clientFd]->getIp() + " [" + std::to_string(clientFd) + "]", utils::serverInfo);
 }
 
-void	Server::updateEvent(int socketFD, short filter, ushort flags, uint fflags, int data, void *udata, bool add)
+void	Server::updateEvent(int socketFD, short filter, ushort flags, uint fflags, int data, void *udata)
 {
 	struct kevent ke;
 	struct timespec	timeout = { 10, 0 };
 
 	EV_SET(&ke, socketFD, filter, flags, fflags, data, udata);
-
-//	if (add)
-//		_chList.push_back(ke);
 
 	if (::kevent(_kq, &ke, 1, nullptr, 0, &timeout) == -1)
 		throw KeventException();

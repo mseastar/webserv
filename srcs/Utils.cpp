@@ -184,6 +184,8 @@ namespace utils {
 
 	bool	endswith(std::string const &haystack, std::string const &needle, bool tight)
 	{
+		if (haystack.empty() || needle.empty())
+			return false;
 		return	(tight ? haystack.size() >= needle.size() : haystack.size() > needle.size()) &&
 				0 == haystack.compare(haystack.size() - needle.size(), needle.size(), needle);
 	}

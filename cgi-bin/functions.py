@@ -49,6 +49,7 @@ def get_passwords():
 def get_response():
     tmp = """HTTP/1.1 {status}\r
 Server: {server}\r
+Connection: keep-alive\r
 Content-Type: {cont_type}\r
 Content-Length: {cont_len}"""
     return tmp

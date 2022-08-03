@@ -66,13 +66,13 @@ bool	Config::is_valid()
 		parse();
 		if (!is_params_valid())
 		{
-			utils::logging(_error_msg, 2);
+			utils::logging(_error_msg, utils::error);
 			return false;
 		}
-		utils::logging("Applying config " + _configFilePathShort, 3);
+		utils::logging("Applying config " + _configFilePathShort, utils::connectionInfo);
 		return true;
 	}
-	utils::logging("Aborted. No config file was provided, neither default nor custom.", 2);
+	utils::logging("Aborted. No config file was provided, neither default nor custom.", utils::error);
 	return false;
 }
 
@@ -123,23 +123,9 @@ void	Config::parse()
 	}
 	for (size_t i = 0; i < _params.size(); ++i)
 	{
-		if (i == 0)
-		{
-			if (_params[i].host.empty())
-				_params[i].host = "127.0.0.1";
-			if (_params[i].port == 0)
-				_params[i].port = 8080;
-			if (_params[i].server_name.empty())
-				_params[i].server_name = "webserv";
-			if (_params[i].error_pages_dir.empty())
-				_params[i].error_pages_dir = "/error_pages";
-			if (_params[i].body_size_limit == 0)
-				_params[i].body_size_limit = 60000;
-			if (_params[i].root.empty())
-				_params[i].root = "./";
-//			if (_params[i].error_pages.empty())
-//				_params[i].error_pages["404"] = "404.html";
-		}
+		if (_params[i].host.empty())
+			_params[i].host = "127.0.0.1";
+
 		if (_params[i].port == 0 || _params[i].server_name.empty() ||
 			_params[i].root.empty() || _params[i].locations.empty())
 		{
@@ -166,12 +152,22 @@ void	Config::parseParams(std::string const &src)
 		}
 		tmpParams[paramsPair.at(0)] = paramsPair.at(1);
 	}
-	_tmp.host					= tmpParams["Host"];
-	_tmp.port					= int(::strtol(tmpParams["Port"].c_str(), nullptr, 10));
-	_tmp.server_name			= tmpParams["Server_name"];
-	_tmp.error_pages_dir		= tmpParams["Error_pages_dir"];
-	_tmp.body_size_limit		= ::strtol(tmpParams["Body_size_limit"].c_str(), nullptr, 10);
-	_tmp.root					= tmpParams["Root"];
+	_tmp.host				= tmpParams["Host"];
+	_tmp.port				= int(::strtol(tmpParams["Port"].c_str(), nullptr, 10));
+	_tmp.server_name		= tmpParams["Server_name"];
+	_tmp.error_pages_dir	= tmpParams["Error_pages_dir"];
+	_tmp.root				= tmpParams["Root"];
+	_tmp.cgi				= tmpParams["Cgi"];
+	if (!is_directory(::getenv("PWD") + std::string("/") + trim(_tmp.root, "/")))
+	{
+		_error_msg = _tmp.server_name + " has invalid root [" + _tmp.root + "] (path isn't a directory/doesn't exist or has poor rights)";
+		return;
+	}
+	if (split(_tmp.cgi).size() == 2 && !exists("./cgi-bin/" + split(_tmp.cgi).at(1)) && !is_executable("./cgi-bin" + split(_tmp.cgi).at(1)))
+	{
+		_error_msg = _tmp.server_name + " has invalid cgi path [" + split(_tmp.cgi).at(1) + "] (path doesn't exist, not executable or has poor rights)";
+		return;
+	}
 
 	std::vector<std::string>	tmp(utils::split(tmpParams["Error_pages"]));
 	for (size_t i = 0; i < tmp.size(); ++i)
@@ -185,8 +181,7 @@ void	Config::parseParams(std::string const &src)
 void	Config::parseRoutes(std::string const &src)
 {
 	std::vector<std::string>			routesList = utils::split(src, "location ");
-	std::vector<std::string>			tmp;
-	std::vector<std::string>			valPair;
+	std::vector<std::string>			tmp, valPair;
 	std::map<std::string, std::string>	map;
 	std::string							location;
 
@@ -201,7 +196,7 @@ void	Config::parseRoutes(std::string const &src)
 		tmp = utils::split(routesList.at(i), " {");
 		if (tmp.size() != 2)
 		{
-			_error_msg = "Config error: expected '{' after location";
+			_error_msg = "Config error: missing URI or '{' after URI";
 			return;
 		}
 		location = tmp.at(0);
@@ -222,10 +217,22 @@ void	Config::parseRoutes(std::string const &src)
 			}
 			map[valPair.at(0)] = valPair.at(1);
 		}
-		if (!is_location_valid(map))
+		if (map["root"].empty())
+			map["root"] = _tmp.root;
+		if (!is_directory(::getenv("PWD") + std::string("/") + trim(map["root"], "/")))
 		{
-			_error_msg = "Config error: error near " + _tmp.host + ":" + std::to_string(_tmp.port) + " location '" + location +
-					"'. Location is expected to have 'page', 'cgi', 'redirect', 'autoindex' or 'root' parameter";
+			_error_msg = "Location [" + location + "] has invalid root [" + map["root"] + "] (path isn't a directory/doesn't exist or has poor rights)";
+			return;
+		}
+		if (map.find("storage") != map.end() &&
+			!is_directory(::getenv("PWD") + std::string("/") + trim(map["root"], "/") + "/" + map["storage"]))
+		{
+			_error_msg = "Location [" + location + "] has invalid storage path [" + map["storage"] + "] (path isn't a directory/doesn't exist or has poor rights)";
+			return;
+		}
+		if (map.find("cgi") != map.end() && !is_executable(::getenv("PWD") + std::string("/cgi-bin/") + trim(map["cgi"], "/")))
+		{
+			_error_msg = "Location [" + location + "] has invalid cgi [" + map["cgi"] + "] (path isn't an executable/doesn't exist or has poor rights)";
 			return;
 		}
 		_tmp.locations[location] = map;
@@ -258,13 +265,46 @@ bool	Config::exists(std::string const &filename)
 	return ::access(filename.c_str(), F_OK) == 0;
 }
 
+bool	Config::is_directory(std::string const &path)
+{
+	struct stat	s;
+
+	if (::lstat(path.c_str(), &s) == 0 && !path.empty())
+		if (S_ISDIR(s.st_mode) && ::access(path.c_str(), R_OK) == 0)
+			return true;
+
+	return false;
+}
+
+bool	Config::is_file(std::string const &path)
+{
+	struct stat	s;
+
+	if (::lstat(path.c_str(), &s) == 0 && !path.empty())
+		if (S_ISREG(s.st_mode) && ::access(path.c_str(), R_OK) == 0)
+			return true;
+
+	return false;
+}
+
+bool	Config::is_executable(std::string const &path)
+{
+	struct stat	s;
+
+	if (::lstat(path.c_str(), &s) == 0 && !path.empty())
+		if (S_ISREG(s.st_mode) && ::access(path.c_str(), X_OK) == 0)
+			return true;
+
+	return false;
+}
+
 bool	Config::is_config(std::string const &filename)
 {
 	struct stat	s;
 
 	if (::lstat(filename.c_str(), &s) == 0 && !filename.empty()) // is it valid path?
 	{
-		if (S_ISREG(s.st_mode) && ::access(filename.c_str(), X_OK) != 0) // is it text file, not executable?
+		if (is_file(filename) && !is_executable(filename))
 		{
 			size_t	dot = filename.find_last_of('.');
 
@@ -274,13 +314,4 @@ bool	Config::is_config(std::string const &filename)
 		}
 	}
 	return false;
-}
-
-bool	Config::is_location_valid(std::map<std::string, std::string> uri_params)
-{
-	if (uri_params["page"].empty() && uri_params["cgi"].empty() &&
-		uri_params["redirect"].empty() && uri_params["autoindex"].empty() &&
-		uri_params["root"].empty())
-		return false;
-	return true;
 }

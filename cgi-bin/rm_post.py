@@ -9,10 +9,14 @@ for i in data:
 post_id = int(dicti.get('id_post'))
 conn = sqlite3.connect("cgi-bin/web.db")
 cur = conn.cursor()
+cur.execute(f"SELECT img_path FROM posts WHERE id = {post_id};")
+res = cur.fetchone()[0].strip('/')
+if res and os.path.isfile(res):
+    os.remove(res)
 cur.execute(f"DELETE FROM posts WHERE id = {post_id};")
 conn.commit()
 print(f"""HTTP/1.1 307 Temporary Redirect\r
 Server: {os.environ['SERVER_NAME']}\r
 Connection: Closed\r
-Location: http://127.0.0.1:8080/profile \r
+Location: http://{os.environ['REMOTE_HOST']}:{os.environ['REMOTE_PORT']}/profile \r
 Content-Length: 0\r\n\r\n""")

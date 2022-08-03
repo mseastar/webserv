@@ -38,11 +38,6 @@ public:
 	struct sockaddr_in			getAddress() const { return address; };
 	int							getAddressLen() const { return addrLen; };
 
-	struct	InetAddrException: std::exception {
-		const char	*what() const throw() {
-			return "Socket: bad host format";
-		}
-	};
 	struct	SocketException: std::exception {
 		const char	*what() const throw() {
 			return "Socket: error in 'socketFd' function";
